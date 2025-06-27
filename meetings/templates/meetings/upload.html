@@ -14,8 +14,71 @@
       <h2 class="mb-0 fs-4 fw-bold"><i class="fas fa-upload me-2"></i>Upload Meeting Recording</h2>
     </div>
     <div class="card-body p-5">
-      <form id="upload-form" enctype="multipart/form-data">
+      <form id="upload-form" method="post" enctype="multipart/form-data">
         {% csrf_token %}
+        
+        <div class="mb-4">
+          <label class="form-label fw-semibold">
+            <i class="fas fa-users me-2"></i>Team
+          </label>
+
+          {% if team_locked %}
+            <div class="card bg-light border-primary">
+              <div class="card-body py-3">
+                <div class="d-flex align-items-center">
+                  <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                    <i class="fas fa-users text-primary"></i>
+                  </div>
+                  <div>
+                    <h6 class="mb-0 fw-semibold">{{ selected_team.name }}</h6>
+                    <small class="text-muted">Meeting will be assigned to this team</small>
+                  </div>
+                  <div class="ms-auto">
+                    <i class="fas fa-lock text-primary"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <input type="hidden" name="team" value="{{ selected_team.id }}">
+          {% else %}
+            <select name="team" id="team" required class="form-control form-control-lg">
+              <option value="">Choose a team...</option>
+              {% for team in teams %}
+              <option value="{{ team.id }}">{{ team.name }}</option>
+              {% endfor %}
+            </select>
+          {% endif %}
+        </div>
+
+        <div class="mb-4">
+          <label for="title" class="form-label fw-semibold">
+            <i class="fas fa-heading me-2"></i>Meeting Title
+          </label>
+          <input type="text" name="title" id="title" required 
+                placeholder="Daily Standup - {{ 'today'|date:'M j, Y' }}"
+                class="form-control form-control-lg">
+        </div>
+
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <label for="meeting_type" class="form-label fw-semibold">
+              <i class="fas fa-tags me-2"></i>Meeting Type
+            </label>
+            <select name="meeting_type" id="meeting_type" class="form-control form-control-lg">
+              {% for value, display in meeting_types %}
+              <option value="{{ value }}" {% if value == 'standup' %}selected{% endif %}>{{ display }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          
+          <div class="col-md-6">
+            <label for="date" class="form-label fw-semibold">
+              <i class="fas fa-calendar me-2"></i>Meeting Date
+            </label>
+            <input type="date" name="date" id="date" required class="form-control form-control-lg">
+          </div>
+        </div>
+
         <div class="mb-4">
           <label for="audio-file" class="form-label fw-semibold">Select Audio File</label>
           <input
@@ -27,13 +90,14 @@
             required
           />
         </div>
+        
         <button type="submit" class="btn btn-primary btn-lg w-100 fw-semibold">
           <i class="fas fa-play me-2"></i>Start Transcription
         </button>
       </form>
       <div id="upload-progress" class="progress mt-4 d-none">
         <div id="upload-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated"
-             role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
       </div>
       <p id="upload-status" class="mt-3 text-center text-muted fst-italic"></p>
     </div>
@@ -42,6 +106,17 @@
     </div>
   </div>
 </div>
+
+<script>
+// Set today's date as default
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('date');
+    if (dateInput && !dateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+    }
+});
+</script>
 
 <script src="{% static 'dashboard/js/upload.js' %}"></script>
 {% endblock %}
