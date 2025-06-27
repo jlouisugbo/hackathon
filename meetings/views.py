@@ -10,9 +10,10 @@ from django.db import transaction
 import json
 import logging
 import os
+import asyncio
 
 from .models import Meeting
-from .transcription_service import transcription_service, TranscriptionServiceError
+from .transcript import Transcript
 
 try:
     from dashboard.models import Team
@@ -138,23 +139,30 @@ def handle_meeting_upload(request):
         messages.error(request, f'Upload failed: {str(e)}')
         return redirect('meetings:upload')
 
+async def get_transcription(transcription_object):
+        try:
+            await transcription_object.getTranscript()
+        except Exception as e:
+            return False, None
+        return True, transcription_object.transcript
 
 def start_transcription(meeting):
     """Start transcription process for a meeting"""
     
-    if not meeting.audio_file:
-        raise TranscriptionServiceError("No audio file attached to meeting")
+    # if not meeting.audio_file:
+        # raise TranscriptionServiceError("No audio file attached to meeting")
+        
     
     # Determine transcription method based on file size
     file_size_mb = meeting.get_audio_size_mb() or 0
-    use_sync = transcription_service.should_use_sync_transcription(file_size_mb)
+    use_sync = False
     
     if use_sync:
         # Synchronous transcription for smaller files
         logger.info(f"Starting sync transcription for meeting {meeting.id}")
         
         with meeting.audio_file.open('rb') as audio_file:
-            result = transcription_service.upload_audio_sync(audio_file, meeting.title)
+            result = None
         
         if result['success']:
             meeting.transcription_processed = result['transcription']
@@ -182,18 +190,21 @@ def start_transcription(meeting):
         logger.info(f"Starting async transcription for meeting {meeting.id}")
         
         with meeting.audio_file.open('rb') as audio_file:
-            success, document_id, error = transcription_service.upload_audio_async(audio_file, meeting.title)
+            transcript_object = Transcript(audio_file)
+            document_id = transcript_object.documentId
+            success,meeting.transcription_raw = asyncio.run(get_transcription(transcript_object))
         
         if success:
             meeting.transcription_document_id = document_id
             meeting.transcription_status = 'processing'
+            meeting.transcription_processed = meeting.transcription_raw["combinedPhrases"][0]["text"]
             meeting.save()
             
             logger.info(f"Async transcription started for meeting {meeting.id}, document_id: {document_id}")
         else:
             meeting.transcription_status = 'failed'
             meeting.save()
-            raise TranscriptionServiceError(error or 'Async transcription upload failed')
+            # raise TranscriptionServiceError(error or 'Async transcription upload failed')
 
 
 def meeting_detail(request, meeting_id):
@@ -224,38 +235,21 @@ def check_transcription_status(meeting):
         return
     
     try:
-        status_result = transcription_service.get_transcription_status(meeting.transcription_document_id)
+        status_result = Transcript.get_transcription_status(meeting.transcription_document_id)
         
-        if not status_result['success']:
+        if not status_result['completed']:
             logger.error(f"Status check failed for meeting {meeting.id}: {status_result.get('error')}")
             return
         
-        status = status_result['status']
+        status = 'completed'
         
         if status == 'completed':
             # Get the full transcription
-            result = transcription_service.get_transcription_result(meeting.transcription_document_id)
+            meeting.duration_minutes = int(meeting.transcription_raw.get('duration_seconds', 0) // 60)
+            meeting.transcription_status = 'completed'
+            meeting.save()
             
-            if result['success']:
-                meeting.transcription_processed = result['transcription']
-                meeting.transcription_raw = {
-                    'transcription': result['transcription'],
-                    'duration_seconds': result.get('duration_seconds'),
-                    'duration_milliseconds': result.get('duration_milliseconds'),
-                    'combined_phrases': result.get('combined_phrases', []),
-                    'phrases': result.get('phrases', []),
-                    'speakers': result.get('speakers', []),
-                    'raw_response': result.get('raw_response', {})
-                }
-                meeting.duration_minutes = int(result.get('duration_seconds', 0) // 60) if result.get('duration_seconds') else None
-                meeting.transcription_status = 'completed'
-                meeting.save()
-                
-                logger.info(f"Async transcription completed for meeting {meeting.id}")
-            else:
-                meeting.transcription_status = 'failed'
-                meeting.save()
-                logger.error(f"Failed to get transcription result for meeting {meeting.id}: {result.get('error')}")
+            logger.info(f"Async transcription completed for meeting {meeting.id}")
         
         elif status == 'failed':
             meeting.transcription_status = 'failed'

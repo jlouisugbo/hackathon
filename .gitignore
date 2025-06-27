@@ -1,3 +1,6 @@
 .vscode/
 hackathon-venv/
-*/__pycahe__/
+*/__pycache__/
+./analytics/Transcripts/
+./analytics/_.ai-npe.humana.com.pem
+./meetings/florenceai-npe.humana.pem

@@ -4,13 +4,11 @@ import asyncio
 from pathlib import Path
 
 
-CERT_FILE_PATH = "florenceai-npe.humana.pem"
+CERT_FILE_PATH = "meetings/florenceai-npe.humana.pem"
 SLEEP_TIME = 10
 
 os.environ["REQUESTS_CA_BUNDLE"] = CERT_FILE_PATH
 os.environ["SSL_CERT_FILE"] = CERT_FILE_PATH
-
-
 
 class Transcript:
     TRANSCRIPTION_STATUS = (
@@ -56,6 +54,28 @@ class Transcript:
         
     def transcriptStatus(self):
         transcription_url = "https://florenceai-npe.humana.com/fasttranscriptionservices/api/v1/transcribe/status/" + self.documentId
+
+        header = {
+            "accept": "application/json",
+            "X-API-Key": KEY
+        }
+
+        try:
+            response = requests.get(transcription_url, headers=header)
+            if response.json()["message"]["message"] == "Transcription done successfully":
+                return 'completed'
+            elif response.json()["message"]["message"] == "Transcription is in progress":
+                return 'in_progress'
+        except Exception as e:
+            print(response.status_code, " ", response.reason, " ", response.text)
+            print(e)
+            return 'error'
+        
+        return 'pending'
+    
+    @staticmethod
+    def get_transcription_status(meetingId):
+        transcription_url = "https://florenceai-npe.humana.com/fasttranscriptionservices/api/v1/transcribe/status/" + meetingId
 
         header = {
             "accept": "application/json",

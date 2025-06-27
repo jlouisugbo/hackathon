@@ -7,7 +7,7 @@ import asyncio
 
 try:
     from dashboard.models import Team
-    from transcript import Transcript
+    from meetings.transcript import Transcript
 except ImportError: 
     Team = None  # handle case where dashboard app is not installed
 
@@ -49,20 +49,23 @@ class Meeting(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    transcription_object = Transcript(audio_file)
+    transcription_document_id = transcription_object.documentId
+
+    class Meta:
+        ordering = ['-date']
+        verbose_name = 'Meeting'
+        verbose_name_plural = 'Meetings'
+
+    def __init__(self):
+        asyncio.run(self.get_transcription())
+        
     async def get_transcription(self):
         await self.transcription_object.getTranscript()
         self.transcription_raw = self.transcription_object.transcript
         self.transcription_processed = self.transcription_raw["combinedPhrases"][0]["text"]
         self.transcription_status = 'completed'
 
-    transcription_object = Transcript(audio_file)
-    transcription_document_id = transcription_object.documentId
-    asyncio.run(get_transcription())
-
-    class Meta:
-        ordering = ['-date']
-        verbose_name = 'Meeting'
-        verbose_name_plural = 'Meetings'
 
     def __str__(self):
         return f"{self.title} - {self.get_meeting_type_display()} - {self.date.strftime('%Y-%m-%d %H:%M')}"

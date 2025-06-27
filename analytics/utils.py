@@ -5,7 +5,9 @@ from datetime import date, timedelta
 from typing import Dict, List, Optional, Tuple
 import os
 
-CERT_FILE_PATH = ""
+
+
+CERT_FILE_PATH = "analytics/_.ai-npe.humana.com.pem"
 
 os.environ["REQUESTS_CA_BUNDLE"] = CERT_FILE_PATH
 os.environ["SSL_CERT_FILE"] = CERT_FILE_PATH
@@ -26,8 +28,6 @@ class MeetingAnalyzer:
     Core class for analyzing meeting transcriptions using OpenAI
     and generating team health metrics.
     """
-    KEY = ""
-    GATEWAY_URL = ""
     
     def __init__(self):
         if not openai:
@@ -245,6 +245,11 @@ def analyze_meeting_and_save_metrics(meeting):
             'duration': f"{meeting.duration_minutes} minutes" if meeting.duration_minutes else 'Unknown'
         }
         
+        file = open("analytics/Transcripts/5abe0825-35e3-474f-85fd-7c4e28971a72_2025_6_26.json", "r")
+
+        meeting.transcription_raw = json.load(file)
+        meeting.transcription_processed = meeting.transcription_raw["combinedPhrases"][0]["text"]
+
         analysis_result = analyzer.analyze_meeting_with_openai(
             meeting.transcription_processed,
             meeting_context

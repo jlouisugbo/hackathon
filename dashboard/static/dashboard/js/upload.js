@@ -18,13 +18,13 @@ document.addEventListener("DOMContentLoaded", () => {
       await new Promise(res => setTimeout(res, 800));
   
       // In the real app you'd do:
-      // const fd = new FormData(form);
-      // const resp = await fetch("{% url 'dashboard:upload_audio' %}", { method: "POST", body: fd });
-      // const { task_id } = await resp.json();
-      // window.location.href = `{% url 'dashboard:transcription_results' task_id='__TASK__' %}`.replace("__TASK__", task_id);
+      const fd = new FormData(form);
+      const resp = await fetch("{% url 'dashboard:upload_audio' %}", { method: "POST", body: fd });
+      const { task_id } = await resp.json();
+      window.location.href = `{% url 'dashboard:transcription_results' task_id='__TASK__' %}`.replace("__TASK__", task_id);
   
       // for now, just go to results page with a fake ID:
-      window.location.href = "/transcription/FAKE_TASK_ID/";
+      // window.location.href = "/transcription/FAKE_TASK_ID/";
     });
   });
   
