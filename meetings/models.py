@@ -3,9 +3,11 @@ from django.utils import timezone
 from django.core.validators import FileExtensionValidator
 from django.conf import settings
 import os
+import asyncio
 
 try:
     from dashboard.models import Team
+    from transcript import Transcript
 except ImportError: 
     Team = None  # handle case where dashboard app is not installed
 
@@ -42,10 +44,19 @@ class Meeting(models.Model):
     transcription_document_id = models.CharField(max_length=100, null=True, blank=True)
     transcription_status = models.CharField(max_length=20, choices=TRANSCRIPTION_STATUS, default='pending')
     transcription_raw = models.JSONField(null=True, blank=True)  # the raw transcription data
-    transcription_processed = models.BooleanField(default=False) # the processed transcription text
+    transcription_processed = models.CharField(max_length=10000, null=True, blank=True) # the processed transcription text
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    async def get_transcription(self):
+        await self.transcription_raw = self.transcription_object.getTranscript()
+        self.transcription_processed = self.transcription_raw["combinedPhrases"][0]["text"]
+        self.transcription_status = 'completed'
+
+    transcription_object = Transcript(audio_file)
+    transcription_document_id = transcription_object.documentId
+    asyncio.run(get_transcription())
 
     class Meta:
         ordering = ['-date']
@@ -103,6 +114,7 @@ class Meeting(models.Model):
         return "Unknown Duration"
     
     def get_transcription_progress(self):
+        self.transcription_status = self.transcription_object.transcriptStatus()
         if self.transcription_status == 'completed':
             return 100
         elif self.transcription_status == 'in_progress':

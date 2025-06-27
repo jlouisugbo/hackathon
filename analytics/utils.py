@@ -3,11 +3,16 @@ import logging
 import re
 from datetime import date, timedelta
 from typing import Dict, List, Optional, Tuple
+import os
+
+CERT_FILE_PATH = ""
+
+os.environ["REQUESTS_CA_BUNDLE"] = CERT_FILE_PATH
+os.environ["SSL_CERT_FILE"] = CERT_FILE_PATH
 
 try:
     import openai
     from django.conf import settings
-    openai.api_key = getattr(settings, 'OPENAI_API_KEY', '')
 except ImportError:
     openai = None
 
@@ -21,13 +26,15 @@ class MeetingAnalyzer:
     Core class for analyzing meeting transcriptions using OpenAI
     and generating team health metrics.
     """
+    KEY = ""
+    GATEWAY_URL = ""
     
     def __init__(self):
         if not openai:
             raise ImportError("OpenAI library not installed. Run: pip install openai")
         
-        if not getattr(settings, 'OPENAI_API_KEY', ''):
-            raise ValueError("OPENAI_API_KEY not configured in settings")
+        # if not getattr(settings, 'OPENAI_API_KEY', ''):
+        #     raise ValueError("OPENAI_API_KEY not configured in settings")
     
     def analyze_meeting_with_openai(self, text_content: str, meeting_context: Dict = None) -> Dict:
         """
@@ -42,16 +49,18 @@ class MeetingAnalyzer:
         """
         try:
             prompt = self._build_analysis_prompt(text_content, meeting_context)
+
+            client = openai.OpenAI(
+                api_key = self.KEY,
+                base_url = self.GATEWAY_URL,
+            )
             
-            response = openai.ChatCompletion.create(
-                model="gpt-4",
-                messages=[
-                    {"role": "system", "content": self._get_system_prompt()},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.1, 
-                max_tokens=2000,
-                response_format={"type": "json_object"}
+            response = client.chat.completions.create(
+            messages=[
+                        {"role": "developer", "content": self._get_system_prompt()},
+                        {"role": "user", "content": prompt}
+                    ],
+                model = self.MODEL,
             )
             
             analysis_text = response.choices[0].message.content
