@@ -1,0 +1,795 @@
+/* Team Health Dashboard Styles - Humana Brand */
+
+/* Humana Brand Colors */
+:root {
+    --humana-green: #00a651;
+    --humana-green-light: #e6f7ed;
+    --humana-green-dark: #007a3d;
+    --humana-blue: #0066cc;
+    --humana-blue-light: #e6f2ff;
+    --humana-blue-dark: #004d99;
+    --humana-orange: #ff6600;
+    --humana-orange-light: #fff2e6;
+    --humana-purple: #663399;
+    --humana-purple-light: #f2e6ff;
+    --humana-gray-50: #f8fafc;
+    --humana-gray-100: #f1f5f9;
+    --humana-gray-200: #e2e8f0;
+    --humana-gray-300: #cbd5e1;
+    --humana-gray-400: #94a3b8;
+    --humana-gray-500: #64748b;
+    --humana-gray-600: #475569;
+    --humana-gray-700: #334155;
+    --humana-gray-800: #1e293b;
+    --humana-gray-900: #0f172a;
+}
+
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    color: var(--humana-gray-800);
+    background-color: var(--humana-gray-50);
+}
+
+/* Dashboard Container */
+.dashboard-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+    min-height: 100vh;
+}
+
+/* Dashboard Header */
+.dashboard-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.dashboard-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--humana-gray-900);
+    margin-bottom: 0.5rem;
+}
+
+.dashboard-subtitle {
+    font-size: 1.125rem;
+    color: var(--humana-gray-600);
+    font-weight: 400;
+}
+
+/* Summary Stats Grid */
+.summary-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+/* Summary Cards */
+.summary-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--humana-gray-200);
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.summary-card-icon {
+    margin-right: 1rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.summary-card-blue .summary-card-icon {
+    background-color: var(--humana-blue-light);
+    color: var(--humana-blue);
+}
+
+.summary-card-green .summary-card-icon {
+    background-color: var(--humana-green-light);
+    color: var(--humana-green);
+}
+
+.summary-card-yellow .summary-card-icon {
+    background-color: var(--humana-orange-light);
+    color: var(--humana-orange);
+}
+
+.summary-card-red .summary-card-icon {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+.summary-card-purple .summary-card-icon {
+    background-color: var(--humana-purple-light);
+    color: var(--humana-purple);
+}
+
+.summary-card-indigo .summary-card-icon {
+    background-color: var(--humana-blue-light);
+    color: var(--humana-blue-dark);
+}
+
+.summary-card-orange .summary-card-icon {
+    background-color: var(--humana-orange-light);
+    color: var(--humana-orange);
+}
+
+.icon {
+    width: 24px;
+    height: 24px;
+}
+
+.summary-card-content h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--humana-gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.summary-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--humana-gray-900);
+}
+
+.summary-number.green {
+    color: var(--humana-green);
+}
+
+.summary-number.yellow {
+    color: var(--humana-orange);
+}
+
+.summary-number.red {
+    color: #dc2626;
+}
+
+/* Teams Section */
+.teams-section {
+    margin-top: 3rem;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.section-header h2 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--humana-gray-900);
+}
+
+/* Button Styles */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.btn-primary {
+    background-color: var(--humana-green);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--humana-green-dark);
+    transform: translateY(-1px);
+}
+
+.btn-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 0.5rem;
+}
+
+/* Teams Grid */
+.teams-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Team Cards */
+.team-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--humana-gray-200);
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+    display: block;
+}
+
+.team-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Team Card Health Status Borders */
+.team-card-green {
+    border-left: 4px solid var(--humana-green);
+}
+
+.team-card-yellow {
+    border-left: 4px solid var(--humana-orange);
+}
+
+.team-card-red {
+    border-left: 4px solid #dc2626;
+}
+
+/* Team Card Header */
+.team-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.team-card-header h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--humana-gray-900);
+    margin: 0;
+}
+
+/* Health Badge */
+.health-badge {
+    display: flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.health-badge-green {
+    background-color: var(--humana-green-light);
+    color: var(--humana-green-dark);
+}
+
+.health-badge-yellow {
+    background-color: var(--humana-orange-light);
+    color: var(--humana-orange);
+}
+
+.health-badge-red {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+.health-icon {
+    width: 14px;
+    height: 14px;
+    margin-right: 0.25rem;
+}
+
+/* Team Card Body */
+.team-card-body {
+    margin-bottom: 1rem;
+}
+
+.team-roles {
+    margin-bottom: 1rem;
+}
+
+.role-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.role-label {
+    font-weight: 600;
+    color: var(--humana-gray-600);
+    font-size: 0.875rem;
+}
+
+.role-name {
+    color: var(--humana-gray-900);
+    font-size: 0.875rem;
+}
+
+/* Team Metrics */
+.team-metrics {
+    border-top: 1px solid var(--humana-gray-200);
+    padding-top: 1rem;
+}
+
+.metric-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.metric-label {
+    font-size: 0.875rem;
+    color: var(--humana-gray-500);
+}
+
+.metric-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--humana-gray-900);
+}
+
+.blocker-count {
+    color: #dc2626;
+}
+
+/* Team Card Footer */
+.team-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid var(--humana-gray-200);
+}
+
+.last-updated {
+    font-size: 0.75rem;
+    color: var(--humana-gray-400);
+}
+
+.arrow-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--humana-gray-400);
+    transition: transform 0.2s ease;
+}
+
+.team-card:hover .arrow-icon {
+    transform: translateX(4px);
+}
+
+/* Empty State */
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.empty-icon {
+    width: 64px;
+    height: 64px;
+    color: var(--humana-gray-400);
+    margin: 0 auto 1rem;
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--humana-gray-600);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: var(--humana-gray-500);
+    margin-bottom: 2rem;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 16px;
+    padding: 0;
+    max-width: 540px;
+    width: 90%;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    transform: translateY(20px) scale(0.95);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-overlay.active .modal-content {
+    transform: translateY(0) scale(1);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, var(--humana-green) 0%, var(--humana-blue) 100%);
+    color: white;
+    padding: 2rem 2rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+}
+
+.modal-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.modal-header h3::before {
+    content: '👥';
+    font-size: 1.25rem;
+}
+
+.modal-close {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 8px;
+    color: white;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+.modal-close svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.modal-body {
+    padding: 2rem;
+    max-height: calc(90vh - 140px);
+    overflow-y: auto;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--humana-gray-700);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 2px solid var(--humana-gray-200);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background: var(--humana-gray-50);
+    font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--humana-green);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(0, 166, 81, 0.1);
+    transform: translateY(-1px);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: var(--humana-gray-400);
+    font-style: italic;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+    font-family: inherit;
+    line-height: 1.5;
+}
+
+/* Input icons */
+.form-group.has-icon {
+    position: relative;
+}
+
+.form-group.has-icon::before {
+    content: attr(data-icon);
+    position: absolute;
+    left: 0.875rem;
+    top: 2.25rem;
+    color: var(--humana-gray-400);
+    font-size: 1rem;
+    pointer-events: none;
+    transition: color 0.2s ease;
+}
+
+.form-group.has-icon input {
+    padding-left: 2.5rem;
+}
+
+.form-group.has-icon input:focus + .form-group.has-icon::before {
+    color: var(--humana-green);
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--humana-gray-200);
+}
+
+.btn {
+    padding: 0.875rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn-secondary {
+    background: var(--humana-gray-100);
+    color: var(--humana-gray-700);
+    flex: 1;
+}
+
+.btn-secondary:hover {
+    background: var(--humana-gray-200);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--humana-green) 0%, var(--humana-blue) 100%);
+    color: white;
+    flex: 2;
+    box-shadow: 0 4px 12px rgba(0, 166, 81, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(0, 166, 81, 0.4);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+/* Demo button */
+.demo-btn {
+    background: linear-gradient(135deg, var(--humana-green) 0%, var(--humana-blue) 100%);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 166, 81, 0.3);
+}
+
+.demo-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 166, 81, 0.4);
+}
+
+/* Loading state */
+.btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.btn.loading::after {
+    content: '';
+    width: 16px;
+    height: 16px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 0.5rem;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Form validation styles */
+.form-group input:invalid:not(:focus):not(:placeholder-shown) {
+    border-color: #dc2626;
+    background-color: #fef2f2;
+}
+
+.form-group input:valid:not(:focus):not(:placeholder-shown) {
+    border-color: var(--humana-green);
+    background-color: var(--humana-green-light);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 1rem;
+    }
+    
+    .dashboard-header h1 {
+        font-size: 2rem;
+    }
+    
+    .summary-stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .teams-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .team-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .modal-content {
+        width: 95%;
+        max-height: 95vh;
+    }
+    
+    .modal-header,
+    .modal-body {
+        padding: 1.5rem;
+    }
+    
+    .modal-actions {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .summary-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .summary-card-icon {
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+    }
+    
+    .role-item,
+    .metric-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.team-card {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.team-card:focus {
+    outline: 2px solid var(--humana-green);
+    outline-offset: 2px;
+}
+
+.btn:focus {
+    outline: 2px solid var(--humana-green);
+    outline-offset: 2px;
+}

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Meetings | AI Team Health Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'humana-green': '#00A651',
+                        'humana-dark-green': '#007A3D',
+                        'humana-light-green': '#E8F5E8',
+                        'humana-blue': '#0066CC',
+                        'humana-dark-blue': '#004C99',
+                        'humana-light-blue': '#E6F2FF',
+                        'humana-orange': '#FF6B35',
+                        'humana-yellow': '#FFC72C',
+                        'humana-gray': '#6B7280',
+                        'humana-light-gray': '#F3F4F6'
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-4">
+                    <a href="/dashboard/" class="text-blue-600 hover:text-blue-800 font-medium">← Back to Dashboard</a>
+                    <div class="h-6 border-l border-gray-200"></div>
+                    <h1 class="text-2xl font-bold text-gray-900">Meetings List</h1>
+                    <span class="text-sm text-gray-500">Comprehensive list of meetings locked to teams</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <a href="{% url 'meetings:upload' %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        Upload Meeting
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Team Meetings</h1>
+                    <p class="mt-2 text-gray-600">View and manage all team meeting recordings and transcriptions</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="bg-white px-4 py-2 rounded-lg border border-gray-200 flex items-center">
+                        <i class="fas fa-calendar-alt text-humana-blue mr-2"></i>
+                        <span class="text-gray-700 font-medium">{{ meetings.count }} Total Meetings</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <form method="GET" class="flex flex-wrap items-center gap-4">
+                <div class="flex-1 min-w-0">
+                    <label for="search" class="sr-only">Search meetings</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                        <input type="text" name="search" id="search" 
+                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-humana-green focus:border-humana-green"
+                               placeholder="Search meetings..." value="{{ request.GET.search }}">
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <select name="team" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-humana-green focus:border-humana-green">
+                        <option value="">All Teams</option>
+                        {% for team in teams %}
+                        <option value="{{ team.id }}" {% if request.GET.team == team.id|stringformat:"s" %}selected{% endif %}>
+                            {{ team.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <select name="status" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-humana-green focus:border-humana-green">
+                        <option value="">All Status</option>
+                        <option value="completed" {% if request.GET.status == "completed" %}selected{% endif %}>Completed</option>
+                        <option value="processing" {% if request.GET.status == "processing" %}selected{% endif %}>Processing</option>
+                        <option value="pending" {% if request.GET.status == "pending" %}selected{% endif %}>Pending</option>
+                        <option value="failed" {% if request.GET.status == "failed" %}selected{% endif %}>Failed</option>
+                    </select>
+                    <select name="meeting_type" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-humana-green focus:border-humana-green">
+                        <option value="">All Types</option>
+                        <option value="standup" {% if request.GET.meeting_type == "standup" %}selected{% endif %}>Daily Standup</option>
+                        <option value="sprint_planning" {% if request.GET.meeting_type == "sprint_planning" %}selected{% endif %}>Sprint Planning</option>
+                        <option value="retrospective" {% if request.GET.meeting_type == "retrospective" %}selected{% endif %}>Retrospective</option>
+                        <option value="review" {% if request.GET.meeting_type == "review" %}selected{% endif %}>Sprint Review</option>
+                        <option value="other" {% if request.GET.meeting_type == "other" %}selected{% endif %}>Other</option>
+                    </select>
+                    <button type="submit" class="bg-humana-blue text-white px-4 py-2 rounded-lg hover:bg-humana-dark-blue transition-colors">
+                        <i class="fas fa-filter mr-2"></i>Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Meetings Grid -->
+        <div class="space-y-4">
+            {% for meeting in meetings %}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
+                 onclick="window.location.href='/meeting/{{ meeting.id }}/'">
+                <div class="p-6">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-3 mb-2">
+                                <h3 class="text-lg font-semibold text-gray-900 hover:text-humana-green transition-colors">
+                                    {{ meeting.title }}
+                                </h3>
+                                <span class="px-2 py-1 text-xs font-medium rounded-full
+                                    {% if meeting.transcription_status == 'completed' %}bg-green-100 text-green-800
+                                    {% elif meeting.transcription_status == 'processing' %}bg-yellow-100 text-yellow-800
+                                    {% elif meeting.transcription_status == 'pending' %}bg-gray-100 text-gray-800
+                                    {% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ meeting.get_transcription_status_display }}
+                                </span>
+                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-humana-light-blue text-humana-blue">
+                                    {{ meeting.get_meeting_type_display }}
+                                </span>
+                            </div>
+                            <div class="flex items-center space-x-6 text-sm text-gray-600 mb-3">
+                                <div class="flex items-center">
+                                    <i class="fas fa-users text-humana-green mr-1"></i>
+                                    <span>{{ meeting.team.name }}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-calendar text-humana-blue mr-1"></i>
+                                    <span>{{ meeting.date|date:"M j, Y" }}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-clock text-humana-orange mr-1"></i>
+                                    <span>{{ meeting.date|date:"g:i A" }}</span>
+                                </div>
+                                {% if meeting.duration_minutes %}
+                                <div class="flex items-center">
+                                    <i class="fas fa-stopwatch text-humana-gray mr-1"></i>
+                                    <span>{{ meeting.get_duration_display }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex items-center space-x-4 text-sm">
+                                {% if meeting.audio_file %}
+                                <a href="{{ meeting.audio_file.url }}" 
+                                   class="text-humana-blue hover:text-humana-dark-blue flex items-center"
+                                   onclick="event.stopPropagation()">
+                                    <i class="fas fa-download mr-1"></i>
+                                    Download Audio
+                                </a>
+                                {% endif %}
+                                {% if meeting.transcription_status == 'completed' %}
+                                <span class="text-green-600 flex items-center">
+                                    <i class="fas fa-check-circle mr-1"></i>
+                                    Transcription Ready
+                                </span>
+                                {% elif meeting.transcription_status == 'processing' %}
+                                <span class="text-yellow-600 flex items-center">
+                                    <i class="fas fa-spinner fa-spin mr-1"></i>
+                                    Processing...
+                                </span>
+                                {% elif meeting.transcription_status == 'failed' %}
+                                <span class="text-red-600 flex items-center">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                                    Transcription Failed
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            {% if meeting.transcription_status == 'completed' %}
+                            <div class="bg-green-50 p-3 rounded-lg">
+                                <i class="fas fa-file-alt text-green-600 text-xl"></i>
+                            </div>
+                            {% elif meeting.transcription_status == 'processing' %}
+                            <div class="bg-yellow-50 p-3 rounded-lg">
+                                <i class="fas fa-cog fa-spin text-yellow-600 text-xl"></i>
+                            </div>
+                            {% elif meeting.transcription_status == 'pending' %}
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <i class="fas fa-clock text-gray-600 text-xl"></i>
+                            </div>
+                            {% else %}
+                            <div class="bg-red-50 p-3 rounded-lg">
+                                <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                            </div>
+                            {% endif %}
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-12">
+                <div class="bg-humana-light-gray p-8 rounded-lg">
+                    <i class="fas fa-calendar-times text-humana-gray text-4xl mb-4"></i>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">No meetings found</h3>
+                    <p class="text-gray-600 mb-4">Get started by uploading your first team meeting recording.</p>
+                    <a href="/meetings/upload/" class="bg-humana-green text-white px-6 py-3 rounded-lg hover:bg-humana-dark-green transition-colors inline-flex items-center">
+                        <i class="fas fa-upload mr-2"></i>
+                        Upload Meeting
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 mt-8 rounded-lg">
+            <div class="flex flex-1 justify-between sm:hidden">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Previous</a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Next</a>
+                {% endif %}
+            </div>
+            <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700">
+                        Showing <span class="font-medium">{{ page_obj.start_index }}</span> to <span class="font-medium">{{ page_obj.end_index }}</span> of
+                        <span class="font-medium">{{ page_obj.paginator.count }}</span> results
+                    </p>
+                </div>
+                <div>
+                    <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                        {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}" class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <span class="relative z-10 inline-flex items-center bg-humana-green px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-humana-green">{{ num }}</span>
+                        {% else %}
+                        <a href="?page={{ num }}" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">{{ num }}</a>
+                        {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}" class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                        {% endif %}
+                    </nav>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </main>
+</body>
+</html>

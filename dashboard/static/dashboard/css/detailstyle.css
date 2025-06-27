@@ -1,0 +1,822 @@
+/* Team Detail Dashboard Styles */
+
+.team-detail-container {
+max-width: 1200px;
+margin: 0 auto;
+padding: 20px;
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+color: #374151;
+line-height: 1.6;
+}
+
+/* Breadcrumb Navigation */
+.breadcrumb {
+display: flex;
+align-items: center;
+margin-bottom: 24px;
+font-size: 14px;
+color: #6b7280;
+}
+
+.breadcrumb-link {
+display: flex;
+align-items: center;
+text-decoration: none;
+color: #3b82f6;
+transition: color 0.2s ease;
+}
+
+.breadcrumb-link:hover {
+color: #1d4ed8;
+}
+
+.breadcrumb-icon {
+width: 16px;
+height: 16px;
+margin-right: 6px;
+}
+
+.breadcrumb-separator {
+margin: 0 12px;
+color: #d1d5db;
+}
+
+.breadcrumb-current {
+font-weight: 500;
+color: #374151;
+}
+
+/* Team Header */
+.team-header {
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+border-radius: 12px;
+padding: 32px;
+margin-bottom: 32px;
+color: white;
+box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.team-header-content {
+display: flex;
+justify-content: space-between;
+align-items: center;
+flex-wrap: wrap;
+gap: 20px;
+}
+
+.team-title-section h1 {
+font-size: 2.5rem;
+font-weight: 700;
+margin: 0 0 16px 0;
+text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Health Badge */
+.health-badge {
+display: inline-flex;
+align-items: center;
+padding: 8px 16px;
+border-radius: 20px;
+font-weight: 600;
+font-size: 12px;
+letter-spacing: 0.5px;
+}
+
+.health-badge-green {
+background-color: rgba(34, 197, 94, 0.2);
+color: #16a34a;
+border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.health-badge-yellow {
+background-color: rgba(245, 158, 11, 0.2);
+color: #d97706;
+border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.health-badge-red {
+background-color: rgba(239, 68, 68, 0.2);
+color: #dc2626;
+border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.health-icon {
+width: 16px;
+height: 16px;
+margin-right: 6px;
+}
+
+/* Team Actions */
+.team-actions {
+display: flex;
+gap: 12px;
+flex-wrap: wrap;
+}
+
+.btn {
+display: inline-flex;
+align-items: center;
+padding: 12px 20px;
+border-radius: 8px;
+text-decoration: none;
+font-weight: 500;
+font-size: 14px;
+transition: all 0.2s ease;
+border: none;
+cursor: pointer;
+}
+
+.btn-primary {
+background-color: #3b82f6;
+color: white;
+}
+
+.btn-primary:hover {
+background-color: #2563eb;
+transform: translateY(-1px);
+box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-secondary {
+background-color: rgba(255, 255, 255, 0.2);
+color: white;
+border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-secondary:hover {
+background-color: rgba(255, 255, 255, 0.3);
+}
+
+.btn-outline {
+background-color: transparent;
+color: #3b82f6;
+border: 1px solid #3b82f6;
+}
+
+.btn-outline:hover {
+background-color: #3b82f6;
+color: white;
+}
+
+.btn-icon {
+width: 16px;
+height: 16px;
+margin-right: 8px;
+}
+
+/* Health Score Section */
+.health-score-section {
+margin-bottom: 32px;
+}
+
+.health-score-card {
+background: white;
+border-radius: 12px;
+padding: 32px;
+box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+border: 1px solid #e5e7eb;
+display: flex;
+align-items: center;
+gap: 32px;
+}
+
+.health-score-visual {
+flex-shrink: 0;
+}
+
+.health-score-circle {
+position: relative;
+width: 120px;
+height: 120px;
+}
+
+.health-score-fill {
+width: 120px;
+height: 120px;
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+position: relative;
+background: conic-gradient(
+    from 0deg,
+    var(--fill-color) 0deg,
+    var(--fill-color) calc(var(--score) * 3.6deg),
+    #e5e7eb calc(var(--score) * 3.6deg),
+    #e5e7eb 360deg
+);
+}
+
+.health-score-fill-green {
+--fill-color: #22c55e;
+}
+
+.health-score-fill-yellow {
+--fill-color: #f59e0b;
+}
+
+.health-score-fill-red {
+--fill-color: #ef4444;
+}
+
+.health-score-fill::before {
+content: '';
+position: absolute;
+width: 80px;
+height: 80px;
+background: white;
+border-radius: 50%;
+}
+
+.health-score-number {
+position: relative;
+z-index: 1;
+font-size: 24px;
+font-weight: 700;
+color: #374151;
+}
+
+.health-score-details h3 {
+font-size: 24px;
+font-weight: 600;
+margin: 0 0 12px 0;
+color: #111827;
+}
+
+.health-score-description {
+font-size: 16px;
+color: #6b7280;
+margin: 0 0 8px 0;
+}
+
+.last-updated {
+font-size: 14px;
+color: #9ca3af;
+}
+
+/* Team Info Grid */
+.team-info-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+gap: 24px;
+margin-bottom: 32px;
+}
+
+.info-card {
+background: white;
+border-radius: 12px;
+border: 1px solid #e5e7eb;
+box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+overflow: hidden;
+}
+
+.info-card-header {
+padding: 20px 24px;
+border-bottom: 1px solid #e5e7eb;
+display: flex;
+align-items: center;
+justify-content: between;
+background-color: #f9fafb;
+}
+
+.info-card-header h3 {
+font-size: 18px;
+font-weight: 600;
+margin: 0;
+color: #111827;
+}
+
+.info-card-icon {
+width: 20px;
+height: 20px;
+margin-left: auto;
+color: #6b7280;
+}
+
+.info-card-content {
+padding: 24px;
+}
+
+/* Team Roles */
+.team-role {
+display: flex;
+align-items: center;
+margin-bottom: 16px;
+padding-bottom: 16px;
+border-bottom: 1px solid #f3f4f6;
+}
+
+.team-role:last-of-type {
+border-bottom: none;
+}
+
+.role-badge {
+display: flex;
+align-items: center;
+justify-content: center;
+width: 40px;
+height: 40px;
+border-radius: 8px;
+font-weight: 700;
+font-size: 12px;
+color: white;
+margin-right: 12px;
+flex-shrink: 0;
+}
+
+.role-badge-scrum {
+background-color: #8b5cf6;
+}
+
+.role-badge-po {
+background-color: #06b6d4;
+}
+
+.role-info strong {
+display: block;
+font-weight: 600;
+color: #111827;
+margin-bottom: 2px;
+}
+
+.role-info span {
+color: #6b7280;
+font-size: 14px;
+}
+
+/* Team Members */
+.team-members {
+margin-top: 20px;
+padding-top: 20px;
+border-top: 1px solid #f3f4f6;
+}
+
+.team-members strong {
+display: block;
+margin-bottom: 12px;
+color: #111827;
+}
+
+.members-list {
+list-style: none;
+padding: 0;
+margin: 0;
+}
+
+.members-list li {
+padding: 8px 0;
+color: #6b7280;
+border-bottom: 1px solid #f3f4f6;
+}
+
+.members-list li:last-child {
+border-bottom: none;
+}
+
+.no-members {
+font-style: italic;
+color: #9ca3af;
+}
+
+/* Metrics */
+.metric-row {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 12px 0;
+border-bottom: 1px solid #f3f4f6;
+}
+
+.metric-row:last-child {
+border-bottom: none;
+}
+
+.metric-label {
+font-weight: 500;
+color: #374151;
+}
+
+.metric-value {
+font-weight: 600;
+color: #111827;
+}
+
+.metric-alert {
+color: #dc2626;
+}
+
+/* Alerts Section */
+.alerts-section {
+margin-bottom: 32px;
+}
+
+.alerts-card {
+background: white;
+border-radius: 12px;
+border: 1px solid #fbbf24;
+box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+overflow: hidden;
+}
+
+.alerts-header {
+padding: 20px 24px;
+background-color: #fffbeb;
+border-bottom: 1px solid #fbbf24;
+display: flex;
+align-items: center;
+}
+
+.alerts-header h3 {
+font-size: 18px;
+font-weight: 600;
+margin: 0;
+color: #92400e;
+display: flex;
+align-items: center;
+}
+
+.alert-icon {
+width: 20px;
+height: 20px;
+margin-right: 8px;
+}
+
+.alerts-content {
+padding: 0;
+}
+
+.alert-item {
+padding: 20px 24px;
+border-bottom: 1px solid #f3f4f6;
+display: flex;
+align-items: flex-start;
+gap: 16px;
+}
+
+.alert-item:last-child {
+border-bottom: none;
+}
+
+.alert-high {
+border-left: 4px solid #dc2626;
+}
+
+.alert-medium {
+border-left: 4px solid #f59e0b;
+}
+
+.alert-low {
+border-left: 4px solid #3b82f6;
+}
+
+.alert-icon-wrapper {
+flex-shrink: 0;
+padding: 4px;
+}
+
+.alert-priority-icon {
+width: 20px;
+height: 20px;
+}
+
+.alert-high .alert-priority-icon {
+color: #dc2626;
+}
+
+.alert-medium .alert-priority-icon {
+color: #f59e0b;
+}
+
+.alert-low .alert-priority-icon {
+color: #3b82f6;
+}
+
+.alert-content p {
+margin: 0 0 8px 0;
+color: #374151;
+font-weight: 500;
+}
+
+.alert-action {
+font-size: 14px;
+color: #6b7280;
+font-style: italic;
+}
+
+/* Blockers Section */
+.blockers-section {
+margin-bottom: 32px;
+}
+
+.blockers-card {
+background: white;
+border-radius: 12px;
+border: 1px solid #e5e7eb;
+box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+overflow: hidden;
+}
+
+.blockers-header {
+padding: 20px 24px;
+background-color: #f9fafb;
+border-bottom: 1px solid #e5e7eb;
+display: flex;
+align-items: center;
+justify-content: space-between;
+}
+
+.blockers-header h3 {
+font-size: 18px;
+font-weight: 600;
+margin: 0;
+color: #111827;
+display: flex;
+align-items: center;
+}
+
+.blocker-icon {
+width: 20px;
+height: 20px;
+margin-right: 8px;
+color: #ef4444;
+}
+
+.blockers-content {
+padding: 0;
+}
+
+.blocker-item {
+padding: 20px 24px;
+border-bottom: 1px solid #f3f4f6;
+display: flex;
+justify-content: space-between;
+align-items: flex-start;
+}
+
+.blocker-item:last-child {
+border-bottom: none;
+}
+
+.blocker-overdue {
+background-color: #fef2f2;
+border-left: 4px solid #dc2626;
+}
+
+.blocker-info {
+flex: 1;
+}
+
+.blocker-description {
+margin: 0 0 12px 0;
+color: #111827;
+font-weight: 500;
+}
+
+.blocker-meta {
+display: flex;
+gap: 16px;
+flex-wrap: wrap;
+}
+
+.blocker-duration,
+.blocker-first-mentioned {
+font-size: 14px;
+color: #6b7280;
+}
+
+.blocker-status {
+flex-shrink: 0;
+margin-left: 16px;
+}
+
+.status-badge {
+padding: 4px 12px;
+border-radius: 12px;
+font-size: 12px;
+font-weight: 600;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+}
+
+.status-overdue {
+background-color: #fef2f2;
+color: #dc2626;
+border: 1px solid #fecaca;
+}
+
+.status-active {
+background-color: #eff6ff;
+color: #2563eb;
+border: 1px solid #bfdbfe;
+}
+
+.status-completed {
+background-color: #f0fdf4;
+color: #16a34a;
+border: 1px solid #bbf7d0;
+}
+
+.status-processing {
+background-color: #fffbeb;
+color: #d97706;
+border: 1px solid #fed7aa;
+}
+
+/* Meetings Section */
+.meetings-section {
+margin-bottom: 32px;
+}
+
+.meetings-card {
+background: white;
+border-radius: 12px;
+border: 1px solid #e5e7eb;
+box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+overflow: hidden;
+}
+
+.meetings-header {
+padding: 20px 24px;
+background-color: #f9fafb;
+border-bottom: 1px solid #e5e7eb;
+display: flex;
+align-items: center;
+justify-content: space-between;
+}
+
+.meetings-header h3 {
+font-size: 18px;
+font-weight: 600;
+margin: 0;
+color: #111827;
+display: flex;
+align-items: center;
+}
+
+.meeting-icon {
+width: 20px;
+height: 20px;
+margin-right: 8px;
+color: #6b7280;
+}
+
+.meetings-content {
+padding: 0;
+}
+
+.meeting-item {
+padding: 20px 24px;
+border-bottom: 1px solid #f3f4f6;
+display: flex;
+justify-content: space-between;
+align-items: flex-start;
+}
+
+.meeting-item:last-child {
+border-bottom: none;
+}
+
+.meeting-info {
+flex: 1;
+}
+
+.meeting-info h4 {
+margin: 0 0 8px 0;
+font-size: 16px;
+font-weight: 600;
+}
+
+.meeting-info h4 a {
+color: #3b82f6;
+text-decoration: none;
+}
+
+.meeting-info h4 a:hover {
+color: #1d4ed8;
+text-decoration: underline;
+}
+
+.meeting-meta {
+display: flex;
+gap: 16px;
+flex-wrap: wrap;
+}
+
+.meeting-date,
+.meeting-type,
+.meeting-duration {
+font-size: 14px;
+color: #6b7280;
+}
+
+.meeting-status {
+flex-shrink: 0;
+margin-left: 16px;
+}
+
+/* Empty States */
+.empty-meetings {
+padding: 60px 24px;
+text-align: center;
+color: #6b7280;
+}
+
+.empty-icon {
+width: 48px;
+height: 48px;
+margin: 0 auto 16px;
+color: #d1d5db;
+}
+
+.empty-meetings p {
+margin: 0 0 20px 0;
+font-size: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+.team-detail-container {
+    padding: 16px;
+}
+
+.team-header {
+    padding: 24px 20px;
+}
+
+.team-header-content {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.team-title-section h1 {
+    font-size: 2rem;
+}
+
+.team-actions {
+    width: 100%;
+    justify-content: flex-start;
+}
+
+.health-score-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+}
+
+.team-info-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+.info-card-content {
+    padding: 20px;
+}
+
+.meeting-item,
+.blocker-item,
+.alert-item {
+    flex-direction: column;
+    gap: 12px;
+}
+
+.meeting-status,
+.blocker-status {
+    margin-left: 0;
+    align-self: flex-start;
+}
+}
+
+@media (max-width: 480px) {
+.breadcrumb {
+    font-size: 12px;
+}
+
+.breadcrumb-icon {
+    width: 14px;
+    height: 14px;
+}
+
+.team-title-section h1 {
+    font-size: 1.75rem;
+}
+
+.btn {
+    padding: 10px 16px;
+    font-size: 13px;
+}
+
+.health-score-circle,
+.health-score-fill {
+    width: 100px;
+    height: 100px;
+}
+
+.health-score-fill::before {
+    width: 70px;
+    height: 70px;
+}
+
+.health-score-number {
+    font-size: 20px;
+}
+}

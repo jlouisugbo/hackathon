@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+{% block title %}Team Health Dashboard{% endblock %}
+{% load static %}
+
+{% block head_scripts %}
+<link rel="stylesheet" type="text/css" href="{% static 'dashboard/css/style.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <h1>Team Health Dashboard</h1>
+        <p class="dashboard-subtitle">Monitor your scrum teams' health and blockers in real-time</p>
+    </div>
+
+    <div class="summary-stats-grid">
+        <div class="summary-card summary-card-blue">
+            <div class="summary-card-icon">
+                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+            </div>
+            <div class="summary-card-content">
+                <h3>Total Teams</h3>
+                <p class="summary-number">{{ summary_stats.total_teams|default:0 }}</p>
+            </div>
+        </div>
+
+        <div class="summary-card summary-card-green">
+            <div class="summary-card-icon">
+                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <div class="summary-card-content">
+                <h3>Healthy Teams</h3>
+                <p class="summary-number green">{{ summary_stats.healthy_teams|default:0 }}</p>
+            </div>
+        </div>
+
+        <div class="summary-card summary-card-yellow">
+            <div class="summary-card-icon">
+                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+            </div>
+            <div class="summary-card-content">
+                <h3>Warning Teams</h3>
+                <p class="summary-number yellow">{{ summary_stats.warning_teams|default:0 }}</p>
+            </div>
+        </div>
+
+        <div class="summary-card summary-card-red">
+            <div class="summary-card-icon">
+                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <div class="summary-card-content">
+                <h3>Critical Teams</h3>
+                <p class="summary-number red">{{ summary_stats.critical_teams|default:0 }}</p>
+            </div>
+        </div>
+
+        <div class="summary-card summary-card-purple">
+            <div class="summary-card-icon">
+                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+            </div>
+            <div class="summary-card-content">
+                <h3>Avg Health Score</h3>
+                <p class="summary-number">{{ summary_stats.avg_health_score|default:0 }}%</p>
+            </div>
+        </div>
+
+        <div class="summary-card summary-card-indigo">
+            <div class="summary-card-icon">
+                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+            </div>
+            <div class="summary-card-content">
+                <h3>Active Teams</h3>
+                <p class="summary-number">{{ summary_stats.active_teams|default:0 }}</p>
+            </div>
+        </div>
+
+        <div class="summary-card summary-card-orange">
+            <div class="summary-card-icon">
+                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L12 12m6.364 6.364L12 12m0 0L5.636 5.636M12 12l6.364-6.364M12 12l-6.364 6.364"></path>
+                </svg>
+            </div>
+            <div class="summary-card-content">
+                <h3>Total Blockers</h3>
+                <p class="summary-number">{{ summary_stats.total_active_blockers|default:0 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Team Cards Grid -->
+    <div class="teams-section">
+        <div class="section-header">
+            <h2>Team Health Overview</h2>
+            <div class="section-actions">
+                <button onclick="openCreateTeamModal()" class="btn btn-primary">
+                    <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    Create Team
+                </button>
+            </div>
+        </div>
+
+        <div id="teams-section" class="teams-grid">
+            {% for team in teams %}
+            <a href="{% url 'dashboard:team_detail' team.id %}" class="team-card team-card-{{ team.get_health_status }}">
+                <div class="team-card-header">
+                    <h3>{{ team.name }}</h3>
+                    <div class="health-badge health-badge-{{ team.get_health_status }}">
+                        {% if team.get_health_status == 'green' %}
+                            <svg class="health-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        {% elif team.get_health_status == 'yellow' %}
+                            <svg class="health-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                        {% else %}
+                            <svg class="health-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        {% endif %}
+                        {{ team.get_health_status|upper }}
+                    </div>
+                </div>
+
+                <div class="team-card-body">
+                    <div class="team-roles">
+                        <div class="role-item">
+                            <span class="role-label">Scrum Master:</span>
+                            <span class="role-name">{{ team.scrum_master }}</span>
+                        </div>
+                        <div class="role-item">
+                            <span class="role-label">Product Owner:</span>
+                            <span class="role-name">{{ team.product_owner }}</span>
+                        </div>
+                    </div>
+
+                    <div class="team-metrics">
+                        <div class="metric-item">
+                            <span class="metric-label">Health Score:</span>
+                            <span class="metric-value">{{ team.get_health_score }}%</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Active Blockers:</span>
+                            <span class="metric-value blocker-count">{{ team.get_active_blocker_count }}</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Team Size:</span>
+                            <span class="metric-value">{{ team.members|length }} members</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="team-card-footer">
+                    <span class="last-updated">
+                        Last updated: {{ team.get_last_health_update|date:"M d, Y" }}
+                    </span>
+                    <svg class="arrow-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </div>
+            </a>
+            {% empty %}
+            <div class="empty-state">
+                <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+                <h3>No Teams Found</h3>
+                <p>Get started by creating your first team.</p>
+                <button onclick="openCreateTeamModal()" class="btn btn-primary">Create Team</button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div id="createTeamModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Create New Team</h3>
+            <button onclick="closeCreateTeamModal()" class="modal-close">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <form id="createTeamForm" method="post" action="{% url 'dashboard:create_team' %}">
+                {% csrf_token %}
+                
+                <div class="form-group has-icon" data-icon="🏷️">
+                    <label for="name">Team Name</label>
+                    <input type="text" id="name" name="name" required 
+                            placeholder="e.g., Frontend Squad Alpha"
+                            minlength="3" maxlength="50">
+                </div>
+                
+                <div class="form-group has-icon" data-icon="👨‍💼">
+                    <label for="scrum_master">Scrum Master</label>
+                    <input type="text" id="scrum_master" name="scrum_master" required 
+                            placeholder="e.g., John Smith"
+                            minlength="2" maxlength="100">
+                </div>
+                
+                <div class="form-group has-icon" data-icon="🎯">
+                    <label for="product_owner">Product Owner</label>
+                    <input type="text" id="product_owner" name="product_owner" required 
+                            placeholder="e.g., Jane Doe"
+                            minlength="2" maxlength="100">
+                </div>
+                
+                <div class="form-group">
+                    <label for="members">Team Members</label>
+                    <textarea id="members" name="members" rows="4" 
+                            placeholder="Enter team member names, one per line:&#10;&#10;Alice Johnson&#10;Bob Wilson&#10;Carol Davis&#10;David Chen"></textarea>
+                    <small style="color: #6b7280; font-size: 0.875rem; margin-top: 0.25rem; display: block;">
+                        💡 Add one team member per line. Leave empty if you'll add members later.
+                    </small>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" onclick="closeCreateTeamModal()" class="btn btn-secondary">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        ✨ Create Team
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openCreateTeamModal() {
+        const modal = document.getElementById('createTeamModal');
+
+        modal.style.display = 'flex';
+        requestAnimationFrame(() => {
+            modal.classList.add('active');
+        });
+        
+        setTimeout(() => {
+            document.getElementById('name').focus();
+        }, 300);
+    }
+
+    function closeCreateTeamModal() {
+        const modal = document.getElementById('createTeamModal');
+        modal.classList.remove('active');
+        setTimeout(() => {
+            modal.style.display = 'none';
+            document.getElementById('createTeamForm').reset();
+        }, 300);
+    }
+
+    document.getElementById('createTeamModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeCreateTeamModal();
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('createTeamModal');
+            if (modal.classList.contains('active')) {
+                closeCreateTeamModal();
+            }
+        }
+    });
+
+    document.getElementById('createTeamForm').addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('.btn-primary');
+        submitBtn.classList.add('loading');
+        submitBtn.textContent = 'Creating Team...';
+        submitBtn.disabled = true;
+    
+    });
+
+
+    const inputs = document.querySelectorAll('input[required]');
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.value.trim() === '') {
+                this.style.borderColor = '#ef4444';
+                this.style.backgroundColor = '#fef2f2';
+            } else if (this.checkValidity()) {
+                this.style.borderColor = '#10b981';
+                this.style.backgroundColor = '#f0fdf4';
+            } else {
+                this.style.borderColor = '#ef4444';
+                this.style.backgroundColor = '#fef2f2';
+            }
+        });
+        
+        input.addEventListener('input', function() {
+            if (this.checkValidity() && this.value.trim() !== '') {
+                this.style.borderColor = '#10b981';
+                this.style.backgroundColor = '#f0fdf4';
+            } else {
+                this.style.borderColor = '#e5e7eb';
+                this.style.backgroundColor = '#fafafa';
+            }
+        });
+    });
+</script>
+{% endblock %}

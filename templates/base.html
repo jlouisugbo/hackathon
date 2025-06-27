@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+<head>
+    <title>{% block title %}HUMANA Status Reporting{% endblock %}</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- CSS & Fonts -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" type="text/css" href="{% static 'dashboard/css/styles.css' %}">
+
+    <!-- Custom Humana Styles -->
+    <style>
+        :root {
+            --humana-green: #00A651;
+            --humana-dark-green: #007A3D;
+            --humana-light-green: #E8F5E8;
+            --humana-blue: #0066CC;
+            --humana-gray: #6C757D;
+            --humana-light-gray: #F8F9FA;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--humana-light-gray);
+        }
+
+        .navbar-humana {
+            background: linear-gradient(135deg, var(--humana-green) 0%, var(--humana-dark-green) 100%);
+            box-shadow: 0 2px 10px rgba(0, 166, 81, 0.2);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-humana.scrolled {
+            padding: 0.5rem 0;
+            box-shadow: 0 4px 20px rgba(0, 166, 81, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            text-decoration: none !important;
+        }
+
+        .navbar-brand:hover {
+            transform: translateY(-1px);
+            transition: all 0.3s ease;
+        }
+
+        .humana-logo {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .humana-logo i {
+            color: var(--humana-green);
+            font-size: 24px;
+        }
+
+        .brand-text {
+            color: white !important;
+        }
+
+        .brand-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .brand-subtitle {
+            font-size: 0.9rem;
+            font-weight: 400;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .navbar-nav .nav-link {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-weight: 500;
+            padding: 0.75rem 1.25rem !important;
+            border-radius: 8px;
+            margin: 0 0.25rem;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-nav .nav-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white !important;
+            transform: translateY(-1px);
+        }
+
+        .navbar-nav .nav-link.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white !important;
+        }
+
+        .navbar-toggler {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+        }
+
+        .navbar-toggler:focus {
+            box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.25);
+        }
+
+        .content-wrapper {
+            min-height: calc(100vh - 200px);
+            background: white;
+            margin: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+            margin-top: 1rem; /* Reduced top margin since navbar is now sticky */
+        }
+
+        .footer-main {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+        }
+
+        .footer-section h5 {
+            color: var(--humana-green);
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .footer-section hr {
+            border-color: var(--humana-green);
+            opacity: 0.5;
+            margin: 0.5rem 0 1rem 0;
+        }
+
+        .footer-section p {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+        }
+
+        .footer-section .nav-link {
+            padding: 0.25rem 0;
+            color: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+        }
+
+        .footer-section .nav-link:hover {
+            color: var(--humana-green);
+            transform: translateX(5px);
+        }
+
+        .footer-bottom {
+            background: #1a252f;
+            border-top: 1px solid rgba(0, 166, 81, 0.3);
+        }
+
+        .developer-link {
+            color: var(--humana-green) !important;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .developer-link:hover {
+            color: white !important;
+            text-shadow: 0 0 8px var(--humana-green);
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .contact-item i {
+            color: var(--humana-green);
+            width: 20px;
+            margin-right: 10px;
+        }
+
+        @media (max-width: 991.98px) {
+            .content-wrapper {
+                margin: 1rem;
+                border-radius: 12px;
+            }
+            
+            .brand-title {
+                font-size: 1.5rem;
+            }
+            
+            .navbar-nav {
+                margin-top: 1rem;
+                padding-top: 1rem;
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
+            }
+        }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    {% block head_scripts %}{% endblock %}
+</head>
+<body>
+    <!-- Enhanced Humana Navbar -->
+    <nav class="navbar navbar-humana navbar-expand-lg" id="main-navbar">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'dashboard:home' %}">
+                <div class="humana-logo">
+                    <i class="fas fa-heartbeat"></i>
+                </div>
+                <div class="brand-text">
+                    <div class="brand-title">HUMANA</div>
+                    <div class="brand-subtitle">Status Reporting</div>
+                </div>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'dashboard:home' %}">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="">
+                            <i class="fas fa-users me-2"></i>Teams
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'meetings:list' %}">
+                            <i class="fas fa-calendar-alt me-2"></i>Meetings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'analytics:dashboard' %}">
+                            <i class="fas fa-chart-line me-2"></i>Analytics
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="">
+                            <i class="fas fa-file-alt me-2"></i>Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="">
+                            <i class="fas fa-cog me-2"></i>Settings
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div class="content-wrapper p-4">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Enhanced Footer -->
+    <footer class="footer-main p-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 col-lg-5 mb-4">
+                    <div class="footer-section">
+                        <h5><i class="fas fa-heartbeat me-2"></i>HUMANA</h5>
+                        <hr />
+                        <p>AI-powered status reporting and team collaboration platform designed to streamline healthcare operations. Track progress, manage meetings, and enhance team productivity with intelligent insights.</p>
+                        <div class="mt-3">
+                            <span class="badge bg-success me-2"><i class="fas fa-shield-alt me-1"></i>HIPAA Compliant</span>
+                            <span class="badge bg-info"><i class="fas fa-lock me-1"></i>Enterprise Secure</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-lg-3 mb-4">
+                    <div class="footer-section">
+                        <h5><i class="fas fa-sitemap me-2"></i>NAVIGATION</h5>
+                        <hr />
+                        <p><a class="nav-link text-white" href="{% url 'dashboard:home' %}"><i class="fas fa-home me-2"></i>Dashboard</a></p>
+                        <p><a class="nav-link text-white" href="{% url 'dashboard:home' %}#teams-section"><i class="fas fa-users me-2"></i>Teams</a></p>
+                        <p><a class="nav-link text-white" href="{% url 'meetings:list' %}"><i class="fas fa-calendar me-2"></i>Meetings</a></p>
+                        <p><a class="nav-link text-white" href="{% url 'analytics:dashboard' %}"><i class="fas fa-analytics me-2"></i>Analytics</a></p>
+                        <p><a class="nav-link text-white" href=""><i class="fas fa-question-circle me-2"></i>Help Center</a></p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-lg-4 mb-4">
+                    <div class="footer-section">
+                        <h5><i class="fas fa-address-book me-2"></i>CONTACT INFO</h5>
+                        <hr />
+                        <div class="contact-item">
+                            <i class="fas fa-building"></i>
+                            <span>HUMANA Inc.<br>500 W Main St, Louisville, KY</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>support@humana.com</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-phone"></i>
+                            <span>1-800-HUMANA (486-2621)</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-clock"></i>
+                            <span>24/7 Technical Support</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Footer Bottom -->
+    <section class="footer-bottom p-3 text-white text-center">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-md-start mb-2 mb-md-0">
+                    <span><strong>DEVELOPED BY:</strong>
+                        <a href="#" class="developer-link" target="_blank">Erin Tan</a>,
+                        <a href="#" class="developer-link" target="_blank">Manasa Makam</a>,
+                        <a href="#" class="developer-link" target="_blank">Joshua Hessing</a>,
+                        <a href="#" class="developer-link" target="_blank">Jalen Chan</a>,
+                        <a href="#" class="developer-link" target="_blank">Joel Louis-Ugbo</a>
+                    </span>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <span>© 2025 HUMANA Inc. | All Rights Reserved | 
+                        <a href="#" class="developer-link">Privacy Policy</a> | 
+                        <a href="#" class="developer-link">Terms of Service</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="{% static 'dashboard/js/script.js' %}"></script>
+    
+    <!-- Sticky Navbar Enhancement Script -->
+    <script>
+        // Enhanced sticky navbar with scroll effects
+        window.addEventListener('scroll', function() {
+            const navbar = document.getElementById('main-navbar');
+            const scrolled = window.scrollY > 50;
+            
+            if (scrolled) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Smooth scrolling for anchor links
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add smooth scrolling behavior
+            document.documentElement.style.scrollBehavior = 'smooth';
+            
+            // Handle teams section scrolling
+            const teamsLink = document.querySelector('a[href*="#teams-section"]');
+            if (teamsLink) {
+                teamsLink.addEventListener('click', function(e) {
+                    // Check if we're already on the home page
+                    if (window.location.pathname === "{% url 'dashboard:home' %}") {
+                        e.preventDefault();
+                        const teamsSection = document.getElementById('teams-section');
+                        if (teamsSection) {
+                            const navbarHeight = document.getElementById('main-navbar').offsetHeight;
+                            const offsetTop = teamsSection.offsetTop - navbarHeight - 20;
+                            window.scrollTo({
+                                top: offsetTop,
+                                behavior: 'smooth'
+                            });
+                        }
+                    }
+                });
+            }
+            
+            // Handle scrolling when page loads with hash
+            if (window.location.hash === '#teams-section') {
+                setTimeout(() => {
+                    const teamsSection = document.getElementById('teams-section');
+                    if (teamsSection) {
+                        const navbarHeight = document.getElementById('main-navbar').offsetHeight;
+                        const offsetTop = teamsSection.offsetTop - navbarHeight - 20;
+                        window.scrollTo({
+                            top: offsetTop,
+                            behavior: 'smooth'
+                        });
+                    }
+                }, 100);
+            }
+        });
+    </script>
+    {% block footer_scripts %}{% endblock %}
+</body>
+</html>
