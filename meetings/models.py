@@ -50,7 +50,8 @@ class Meeting(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     async def get_transcription(self):
-        await self.transcription_raw = self.transcription_object.getTranscript()
+        await self.transcription_object.getTranscript()
+        self.transcription_raw = self.transcription_object.transcript
         self.transcription_processed = self.transcription_raw["combinedPhrases"][0]["text"]
         self.transcription_status = 'completed'
 
