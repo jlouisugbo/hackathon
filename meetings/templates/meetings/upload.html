@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Upload Audio{% endblock %}
+{% block title %}Upload Transcript{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'dashboard/css/upload.css' %}">
@@ -11,7 +11,7 @@
 <div class="container-sm mt-5">
   <div class="card shadow-sm border-0 upload-card">
     <div class="card-header bg-white text-dark text-center py-4 border-bottom">
-      <h2 class="mb-0 fs-4 fw-bold"><i class="fas fa-upload me-2"></i>Upload Meeting Recording</h2>
+      <h2 class="mb-0 fs-4 fw-bold"><i class="fas fa-file-import me-2"></i>Upload Meeting Transcript</h2>
     </div>
     <div class="card-body p-5">
       <form id="upload-form" method="post" enctype="multipart/form-data">
@@ -80,19 +80,24 @@
         </div>
 
         <div class="mb-4">
-          <label for="audio-file" class="form-label fw-semibold">Select Audio File</label>
+          <label for="transcript-file" class="form-label fw-semibold">
+            <i class="fas fa-file-code me-2"></i>Select Transcript File
+          </label>
           <input
             type="file"
-            name="audio_file"
-            id="audio-file"
-            accept=".m4a,.mp3,.wav"
+            name="transcript_json"
+            id="transcript-file"
+            accept=".json"
             class="form-control form-control-lg"
             required
           />
+          <div class="form-text">
+            Upload a JSON file containing the meeting transcript. Ensure it follows the expected format.
+          </div>
         </div>
         
         <button type="submit" class="btn btn-primary btn-lg w-100 fw-semibold">
-          <i class="fas fa-play me-2"></i>Start Transcription
+          <i class="fas fa-brain me-2"></i>Process Transcript
         </button>
       </form>
       <div id="upload-progress" class="progress mt-4 d-none">
@@ -102,7 +107,7 @@
       <p id="upload-status" class="mt-3 text-center text-muted fst-italic"></p>
     </div>
     <div class="card-footer text-center small text-muted border-top">
-      Accepted formats: .m4a, .mp3, .wav
+      Accepted format: .json (Transcript JSON format)
     </div>
   </div>
 </div>
@@ -115,6 +120,24 @@ document.addEventListener('DOMContentLoaded', function() {
         const today = new Date().toISOString().split('T')[0];
         dateInput.value = today;
     }
+    
+    // Validate JSON file before upload
+    const fileInput = document.getElementById('transcript-file');
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    JSON.parse(e.target.result);
+                } catch (error) {
+                    alert('Invalid JSON file. Please upload a valid JSON transcript.');
+                    fileInput.value = '';
+                }
+            };
+            reader.readAsText(file);
+        }
+    });
 });
 </script>
 

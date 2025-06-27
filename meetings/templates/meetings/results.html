@@ -1,72 +1,176 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Transcription Results{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'dashboard/css/results.css' %}">
-{% endblock %}
+{% block title %}{{ meeting.title }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-5 bg-light-minimal">
-  <div class="row justify-content-center">
-    <div class="col-12 col-md-10 col-lg-8">
-      <div class="card shadow-sm border-0">
-        <div class="card-header bg-gradient-primary text-white py-4 rounded-top">
-          <h2 class="mb-0"><i class="fas fa-microphone-alt me-2"></i>Transcription Results</h2>
-          <small class="text-white-75">Task ID: {{ task_id }}</small>
-        </div>
-        <div class="card-body p-5">
-          <div id="poll-status" class="alert alert-info d-flex align-items-center" role="alert">
-            <i class="fas fa-spinner fa-spin me-3"></i>
-            <div>Waiting for transcript…</div>
-          </div>
-
-          <section id="transcript" class="d-none">
-            <h3 class="section-title"><i class="fas fa-file-alt me-2"></i>Transcript</h3>
-            <pre id="transcript-text" class="bg-white p-4 rounded shadow-sm border">–</pre>
-          </section>
-
-          <section id="summary" class="d-none mt-5">
-            <h3 class="section-title"><i class="fas fa-chart-pie me-2"></i>Summary & Metrics</h3>
-            <div class="row gy-4">
-              <!-- Metric Card -->
-              {% for metric in ['Participation','Cadence','Blockers','Progress'] %}
-                <div class="col-12 col-sm-6 col-lg-3">
-                  <div class="metric-card d-flex align-items-center p-3 bg-white rounded shadow-sm h-100 transition-hover">
-                    <div class="icon-circle me-3 text-{{ metric|lower }}-bg">
-                      {% if metric == 'Participation' %}<i class="fas fa-users"></i>
-                      {% elif metric == 'Cadence' %}<i class="fas fa-tachometer-alt"></i>
-                      {% elif metric == 'Blockers' %}<i class="fas fa-exclamation-triangle"></i>
-                      {% else %}<i class="fas fa-chart-line"></i>{% endif %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Meeting Header -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">{{ meeting.title }}</h4>
+                        <span class="badge {{ meeting.get_status_badge_class }}">
+                            {{ meeting.get_transcription_status_display }}
+                        </span>
                     </div>
-                    <div class="flex-grow-1">
-                      <h5 class="mb-1">{{ metric }}</h5>
-                      {% if metric != 'Progress' %}
-                        <p id="{{ metric|lower }}-text" class="fs-4 fw-semibold text-dark">–</p>
-                      {% else %}
-                        <div class="progress bg-light">
-                          <div id="progress-bar" class="progress-bar bg-gradient-info" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                        <span id="progress-text" class="fs-6 text-secondary">–</span>
-                      {% endif %}
-                    </div>
-                  </div>
                 </div>
-              {% endfor %}
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Team:</strong> {{ meeting.get_team_name }}</p>
+                            <p class="mb-1"><strong>Type:</strong> {{ meeting.get_meeting_type_display }}</p>
+                            <p class="mb-1"><strong>Date:</strong> {{ meeting.date|date:"F j, Y g:i A" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Duration:</strong> {{ meeting.get_duration_display }}</p>
+                            {% if meeting.audio_file %}
+                            <p class="mb-1">
+                                <strong>Audio:</strong> 
+                                <a href="{{ meeting.audio_file.url }}" download>
+                                    <i class="fas fa-download"></i> {{ meeting.get_audio_filename }}
+                                </a>
+                                {% if meeting.get_audio_size_mb %}
+                                <small class="text-muted">({{ meeting.get_audio_size_mb }} MB)</small>
+                                {% endif %}
+                            </p>
+                            {% endif %}
+                            <p class="mb-1"><strong>Created:</strong> {{ meeting.created_at|date:"M j, Y g:i A" }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="mt-3">
+                        {% if meeting.is_transcription_ready and not meeting.has_analytics %}
+                        <form method="post" action="{% url 'generate_analytics' meeting.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-chart-bar"></i> Generate Analytics
+                            </button>
+                        </form>
+                        {% endif %}
+
+                        {% if meeting.is_transcription_ready %}
+                        <a href="{% url 'view_transcript' meeting.id %}" class="btn btn-success ml-2">
+                            <i class="fas fa-file-alt"></i> View Full Transcript
+                        </a>
+                        {% endif %}
+
+                        <a href="{% url 'edit_meeting' meeting.id %}" class="btn btn-outline-secondary ml-2">
+                            <i class="fas fa-edit"></i> Edit Meeting
+                        </a>
+
+                        <button type="button" class="btn btn-outline-danger ml-2" data-toggle="modal" data-target="#deleteModal">
+                            <i class="fas fa-trash-alt"></i> Delete
+                        </button>
+                    </div>
+                </div>
             </div>
-          </section>
+
+            <!-- Analytics Section (if available) -->
+            {% if meeting.has_analytics %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Meeting Analytics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Key Topics</h6>
+                            <ul class="list-group list-group-flush">
+                                {% for topic in meeting.get_topics %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ topic.name }}
+                                    <span class="badge badge-primary badge-pill">{{ topic.count }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Participants</h6>
+                            <div class="list-group">
+                                {% for participant in meeting.get_participants %}
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between">
+                                        <span>{{ participant.name }}</span>
+                                        <small class="text-muted">{{ participant.speaking_time }}s</small>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 5px;">
+                                        <div class="progress-bar" role="progressbar" 
+                                             style="width: {{ participant.speaking_percentage }}%;"></div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Summary Section -->
+            {% if meeting.summary %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Meeting Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="meeting-summary">
+                        {{ meeting.summary|linebreaks }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Action Items Section -->
+            {% if meeting.action_items.all %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Action Items</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for item in meeting.action_items.all %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ item.description }}</strong>
+                                <div class="text-muted small">Assigned to: {{ item.assigned_to.get_full_name }}</div>
+                                <div class="text-muted small">Due: {{ item.due_date|date:"M j, Y" }}</div>
+                            </div>
+                            <span class="badge badge-{{ item.get_status_class }}">{{ item.get_status_display }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
         </div>
-        <div class="card-footer text-center small text-muted">
-          Powered by Our Transcription Engine
-        </div>
-      </div>
     </div>
-  </div>
 </div>
 
-<script>
-  window.taskId = "{{ task_id }}";
-</script>
-<script src="{% static 'dashboard/js/results.js' %}"></script>
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this meeting? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'delete_meeting' meeting.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete Meeting</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
