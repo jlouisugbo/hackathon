@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Transcription Results{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'dashboard/css/results.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5 bg-light-minimal">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-gradient-primary text-white py-4 rounded-top">
+          <h2 class="mb-0"><i class="fas fa-microphone-alt me-2"></i>Transcription Results</h2>
+          <small class="text-white-75">Task ID: {{ task_id }}</small>
+        </div>
+        <div class="card-body p-5">
+          <div id="poll-status" class="alert alert-info d-flex align-items-center" role="alert">
+            <i class="fas fa-spinner fa-spin me-3"></i>
+            <div>Waiting for transcript…</div>
+          </div>
+
+          <section id="transcript" class="d-none">
+            <h3 class="section-title"><i class="fas fa-file-alt me-2"></i>Transcript</h3>
+            <pre id="transcript-text" class="bg-white p-4 rounded shadow-sm border">–</pre>
+          </section>
+
+          <section id="summary" class="d-none mt-5">
+            <h3 class="section-title"><i class="fas fa-chart-pie me-2"></i>Summary & Metrics</h3>
+            <div class="row gy-4">
+              <!-- Metric Card -->
+              {% for metric in ['Participation','Cadence','Blockers','Progress'] %}
+                <div class="col-12 col-sm-6 col-lg-3">
+                  <div class="metric-card d-flex align-items-center p-3 bg-white rounded shadow-sm h-100 transition-hover">
+                    <div class="icon-circle me-3 text-{{ metric|lower }}-bg">
+                      {% if metric == 'Participation' %}<i class="fas fa-users"></i>
+                      {% elif metric == 'Cadence' %}<i class="fas fa-tachometer-alt"></i>
+                      {% elif metric == 'Blockers' %}<i class="fas fa-exclamation-triangle"></i>
+                      {% else %}<i class="fas fa-chart-line"></i>{% endif %}
+                    </div>
+                    <div class="flex-grow-1">
+                      <h5 class="mb-1">{{ metric }}</h5>
+                      {% if metric != 'Progress' %}
+                        <p id="{{ metric|lower }}-text" class="fs-4 fw-semibold text-dark">–</p>
+                      {% else %}
+                        <div class="progress bg-light">
+                          <div id="progress-bar" class="progress-bar bg-gradient-info" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <span id="progress-text" class="fs-6 text-secondary">–</span>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </section>
+        </div>
+        <div class="card-footer text-center small text-muted">
+          Powered by Our Transcription Engine
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  window.taskId = "{{ task_id }}";
+</script>
+<script src="{% static 'dashboard/js/results.js' %}"></script>
+{% endblock %}
