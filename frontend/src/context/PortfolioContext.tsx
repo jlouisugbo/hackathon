@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Portfolio, Holding, Player } from '@player-stock-market/shared';
 import { apiService } from '../services/api';
 import { useAuth } from './AuthContext';
@@ -9,9 +10,9 @@ interface PortfolioContextType {
   error: string | null;
   refreshPortfolio: () => Promise<void>;
   updateHoldingPrice: (playerId: string, newPrice: number) => void;
-  addUserTrade: (holding: Holding, accountType: 'season' | 'live') => void;
-  updatePortfolioValues: (players: Player[]) => void;
-  updateCashBalance: (amount: number, type: 'buy' | 'sell') => void;
+  addUserTrade: (holding: Holding, accountType: 'season' | 'live') => Promise<void>;
+  updatePortfolioValues: (players: Player[]) => Promise<void>;
+  updateCashBalance: (amount: number, type: 'buy' | 'sell') => Promise<void>;
 }
 
 const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined);
@@ -23,6 +24,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const updateTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const [userTrades, setUserTrades] = useState<{season: Holding[], live: Holding[]}>({season: [], live: []});
+  const [sessionPortfolio, setSessionPortfolio] = useState<Portfolio | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -42,35 +44,56 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       console.log('📊 Fetching portfolio for user:', user.id);
 
+      // Fetch portfolio from backend API
       const response = await apiService.getPortfolio(user.id);
-      console.log('📊 Portfolio API response:', response);
-
+      
       if (response.success && response.data) {
-        console.log('✅ Portfolio data received:', response.data);
+        console.log('📊 Portfolio fetched from backend:', response.data);
+        setPortfolio(response.data);
+        setSessionPortfolio(response.data);
         
-        // Completely clean portfolio: use only user trades, ignore all backend data
-        const cleanedPortfolio = {
-          userId: response.data.userId,
-          seasonHoldings: userTrades.season, // Only user's actual trades
-          liveHoldings: userTrades.live, // Only user's actual trades
-          totalValue: 1000, // Start with $1000 base
-          availableBalance: 1000, // Start with $1000 cash
+        // Also save to session for offline access
+        await AsyncStorage.setItem(`portfolio_${user.id}`, JSON.stringify(response.data));
+      } else {
+        console.log('📊 No portfolio found, creating fresh portfolio');
+        // Create a fresh portfolio if none exists
+        const freshPortfolio = {
+          userId: user.id,
+          seasonHoldings: [],
+          liveHoldings: [],
+          totalValue: 10000,
+          availableBalance: 10000,
           todaysPL: 0,
           seasonPL: 0,
           livePL: 0,
-          tradesRemaining: 5,
+          tradesRemaining: 100,
           lastUpdated: Date.now()
         };
         
-        console.log('🧹 Cleaned portfolio:', cleanedPortfolio);
-        setPortfolio(cleanedPortfolio);
-      } else {
-        console.log('❌ Portfolio fetch failed:', response.error);
-        setError(response.error || 'Failed to fetch portfolio');
+        console.log('🆕 Creating fresh portfolio:', freshPortfolio);
+        setPortfolio(freshPortfolio);
+        setSessionPortfolio(freshPortfolio);
+        
+        // Save to session
+        await AsyncStorage.setItem(`portfolio_${user.id}`, JSON.stringify(freshPortfolio));
       }
+      
     } catch (err) {
       console.error('❌ Error fetching portfolio:', err);
       setError('Network error occurred');
+      
+      // Fallback to session data if API fails
+      try {
+        const sessionData = await AsyncStorage.getItem(`portfolio_${user.id}`);
+        if (sessionData) {
+          const parsedSession = JSON.parse(sessionData);
+          console.log('📊 Using fallback session data:', parsedSession);
+          setPortfolio(parsedSession);
+          setSessionPortfolio(parsedSession);
+        }
+      } catch (sessionError) {
+        console.error('❌ No fallback data available:', sessionError);
+      }
     } finally {
       setLoading(false);
     }
@@ -137,15 +160,22 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     // }, 500); // Debounce for 500ms to prevent rapid updates
   };
 
-  const addUserTrade = (holding: Holding, accountType: 'season' | 'live') => {
+  const addUserTrade = async (holding: Holding, accountType: 'season' | 'live') => {
     console.log('➕ Adding user trade:', holding, accountType);
-    setUserTrades(prev => {
-      const existingHoldings = prev[accountType];
-      const existingHoldingIndex = existingHoldings.findIndex(h => h.playerId === holding.playerId);
+    
+    let updatedPortfolio: Portfolio | null = null;
+    
+    setPortfolio(prev => {
+      if (!prev) return null;
+      
+      const currentHoldings = accountType === 'season' ? prev.seasonHoldings : prev.liveHoldings;
+      const existingHoldingIndex = currentHoldings.findIndex(h => h.playerId === holding.playerId);
+      
+      let updatedHoldings;
       
       if (existingHoldingIndex >= 0) {
-        // Stack with existing holding (like real stock trading)
-        const existingHolding = existingHoldings[existingHoldingIndex];
+        // Update existing holding
+        const existingHolding = currentHoldings[existingHoldingIndex];
         const totalShares = existingHolding.shares + holding.shares;
         const totalCost = (existingHolding.averagePrice * existingHolding.shares) + (holding.averagePrice * holding.shares);
         const newAveragePrice = totalCost / totalShares;
@@ -154,31 +184,58 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
           ...holding,
           shares: totalShares,
           averagePrice: newAveragePrice,
-          totalValue: totalShares * holding.currentPrice, // Use current price for total value
-          purchaseDate: Math.min(existingHolding.purchaseDate, holding.purchaseDate), // Keep earliest purchase date
+          totalValue: totalShares * holding.currentPrice,
+          purchaseDate: Math.min(existingHolding.purchaseDate, holding.purchaseDate),
           daysSinceHeld: Math.floor((Date.now() - Math.min(existingHolding.purchaseDate, holding.purchaseDate)) / (1000 * 60 * 60 * 24))
         };
         
-        const newHoldings = [...existingHoldings];
-        newHoldings[existingHoldingIndex] = updatedHolding;
+        updatedHoldings = [...currentHoldings];
+        updatedHoldings[existingHoldingIndex] = updatedHolding;
         
-        console.log('📈 Stacked holdings:', { existing: existingHolding, new: holding, result: updatedHolding });
-        
-        return {
-          ...prev,
-          [accountType]: newHoldings
-        };
+        console.log('📈 Updated existing holding:', updatedHolding);
       } else {
-        // New holding
-        return {
-          ...prev,
-          [accountType]: [...prev[accountType], holding]
-        };
+        // Add new holding
+        updatedHoldings = [...currentHoldings, holding];
+        console.log('🆕 Added new holding:', holding);
       }
+      
+      // Recalculate total values
+      const seasonValue = accountType === 'season' 
+        ? updatedHoldings.reduce((sum, h) => sum + h.totalValue, 0)
+        : prev.seasonHoldings.reduce((sum, h) => sum + h.totalValue, 0);
+      const liveValue = accountType === 'live'
+        ? updatedHoldings.reduce((sum, h) => sum + h.totalValue, 0)
+        : prev.liveHoldings.reduce((sum, h) => sum + h.totalValue, 0);
+      
+      const newTotalValue = seasonValue + liveValue + prev.availableBalance;
+      
+      updatedPortfolio = {
+        ...prev,
+        [accountType === 'season' ? 'seasonHoldings' : 'liveHoldings']: updatedHoldings,
+        totalValue: Math.round(newTotalValue * 100) / 100,
+        lastUpdated: Date.now()
+      };
+      
+      return updatedPortfolio;
     });
+    
+    // Save to session storage after state update
+    if (user && updatedPortfolio) {
+      try {
+        await AsyncStorage.setItem(`portfolio_${user.id}`, JSON.stringify(updatedPortfolio));
+        console.log('💾 Saved portfolio to session storage');
+        
+        // Also save to backend (the backend should already have the updated portfolio from the trade execution)
+        // But we'll refresh from backend to ensure consistency
+        console.log('🔄 Refreshing portfolio from backend to ensure consistency...');
+        await fetchPortfolio();
+      } catch (error) {
+        console.error('❌ Failed to save portfolio to session storage:', error);
+      }
+    }
   };
 
-  const updatePortfolioValues = (players: Player[]) => {
+  const updatePortfolioValues = async (players: Player[]) => {
     if (!portfolio) return;
     
     console.log('🔄 Updating portfolio values with current player prices...');
@@ -217,7 +274,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     const seasonPL = updatedSeasonHoldings.reduce((sum, h) => sum + h.unrealizedPL, 0);
     const livePL = updatedLiveHoldings.reduce((sum, h) => sum + h.unrealizedPL, 0);
 
-    setPortfolio({
+    const updatedPortfolio = {
       ...portfolio,
       seasonHoldings: updatedSeasonHoldings,
       liveHoldings: updatedLiveHoldings,
@@ -225,12 +282,24 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       seasonPL: Math.round(seasonPL * 100) / 100,
       livePL: Math.round(livePL * 100) / 100,
       lastUpdated: Date.now()
-    });
+    };
+    
+    setPortfolio(updatedPortfolio);
+    
+    // Save to session storage
+    if (user) {
+      try {
+        await AsyncStorage.setItem(`portfolio_${user.id}`, JSON.stringify(updatedPortfolio));
+        console.log('💾 Saved updated portfolio values to session storage');
+      } catch (error) {
+        console.error('❌ Failed to save portfolio values to session storage:', error);
+      }
+    }
     
     console.log('✅ Portfolio values updated:', { totalValue, seasonPL, livePL });
   };
 
-  const updateCashBalance = (amount: number, type: 'buy' | 'sell') => {
+  const updateCashBalance = async (amount: number, type: 'buy' | 'sell') => {
     if (!portfolio) return;
     
     console.log(`💰 Updating cash balance: ${type} $${amount}`);
@@ -244,12 +313,24 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       .reduce((sum, holding) => sum + holding.totalValue, 0);
     const newTotalValue = newBalance + holdingsValue;
     
-    setPortfolio(prev => prev ? {
-      ...prev,
+    const updatedPortfolio = {
+      ...portfolio,
       availableBalance: Math.round(newBalance * 100) / 100,
       totalValue: Math.round(newTotalValue * 100) / 100,
       lastUpdated: Date.now()
-    } : null);
+    };
+    
+    setPortfolio(updatedPortfolio);
+    
+    // Save to session storage
+    if (user) {
+      try {
+        await AsyncStorage.setItem(`portfolio_${user.id}`, JSON.stringify(updatedPortfolio));
+        console.log('💾 Saved updated portfolio to session storage');
+      } catch (error) {
+        console.error('❌ Failed to save portfolio to session storage:', error);
+      }
+    }
     
     console.log(`✅ Cash balance updated: $${newBalance.toFixed(2)}, Total: $${newTotalValue.toFixed(2)}`);
   };

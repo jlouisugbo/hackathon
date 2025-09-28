@@ -227,7 +227,7 @@ async function executeTradeWithDatabase(userId, playerId, playerName, type, shar
     }
 }
 // POST /api/trades/market - Execute market order
-router.post('/market', (req, res) => {
+router.post('/market', async (req, res) => {
     try {
         const tradeRequest = req.body;
         const { playerId, type, shares, accountType } = tradeRequest;
@@ -404,6 +404,27 @@ router.post('/market', (req, res) => {
         if (accountType === 'live') {
             portfolio.tradesRemaining = Math.max(0, portfolio.tradesRemaining - 1);
         }
+        // Save portfolio to database
+        try {
+            const dbResult = await databaseService_1.databaseService.updatePortfolio(userId, portfolio);
+            if (!dbResult) {
+                console.error('❌ Database update returned false');
+                return res.status(500).json({
+                    success: false,
+                    error: 'Database update failed',
+                    message: 'Trade executed but failed to save to database'
+                });
+            }
+            console.log('✅ Portfolio saved to database successfully');
+        }
+        catch (error) {
+            console.error('❌ Failed to save portfolio to database:', error);
+            return res.status(500).json({
+                success: false,
+                error: 'Database update failed',
+                message: 'Trade executed but failed to save to database'
+            });
+        }
         // Add trade to history
         (0, mockData_1.addTrade)(trade);
         const response = {
@@ -423,7 +444,7 @@ router.post('/market', (req, res) => {
     }
 });
 // POST /api/trades/limit - Place limit order
-router.post('/limit', (req, res) => {
+router.post('/limit', async (req, res) => {
     try {
         const { playerId, type, shares, limitPrice, accountType } = req.body;
         const userId = req.headers['user-id'] || 'user-1'; // Demo user ID

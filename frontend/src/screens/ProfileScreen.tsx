@@ -21,22 +21,17 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { usePortfolio } from '../context/PortfolioContext';
 import { useSocket } from '../context/SocketContext';
+import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/api';
 import { theme } from '../theme/theme';
 import { formatCurrency, formatPercent, formatDate, formatRank } from '../utils/formatters';
 
-// Mock user data - in real app this would come from auth
-const DEMO_USER = {
-  id: 'user-1',
-  username: 'DemoUser',
-  email: 'demo@playerstockmarket.com',
-  joinDate: Date.now() - (90 * 24 * 60 * 60 * 1000), // 90 days ago
-  avatarUrl: undefined,
-};
+// Get user data from auth context instead of hardcoded demo data
 
 export default function ProfileScreen() {
   const { portfolio } = usePortfolio();
   const { notifications, userCount, isConnected } = useSocket();
+  const { user, logout } = useAuth();
   const [userStats, setUserStats] = useState<any>(null);
   const [userRank, setUserRank] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -49,12 +44,24 @@ export default function ProfileScreen() {
     try {
       // Fetch user rank and stats
       const [rankResponse, statsResponse] = await Promise.all([
-        apiService.getUserLeaderboardPosition(DEMO_USER.id),
+        apiService.getUserLeaderboardPosition(user?.id || ''),
         apiService.getLeaderboardStats(),
       ]);
 
       if (rankResponse.success && rankResponse.data) {
         setUserRank(rankResponse.data);
+      } else {
+        // User not in leaderboard yet - create default rank data
+        console.log('📊 User not in leaderboard yet, using default rank');
+        setUserRank({
+          rank: 999,
+          totalUsers: 12,
+          portfolioValue: portfolio?.totalValue || 1000,
+          todaysPL: portfolio?.todaysPL || 0,
+          todaysPLPercent: portfolio?.todaysPL ? (portfolio.todaysPL / (portfolio.totalValue || 1000)) * 100 : 0,
+          previousRank: 999,
+          badges: []
+        });
       }
 
       // Mock user stats for demo
@@ -69,6 +76,16 @@ export default function ProfileScreen() {
       });
     } catch (error) {
       console.error('Error fetching user data:', error);
+      // Set default values on error
+      setUserRank({
+        rank: 999,
+        totalUsers: 12,
+        portfolioValue: portfolio?.totalValue || 1000,
+        todaysPL: portfolio?.todaysPL || 0,
+        todaysPLPercent: portfolio?.todaysPL ? (portfolio.todaysPL / (portfolio.totalValue || 1000)) * 100 : 0,
+        previousRank: 999,
+        badges: []
+      });
     } finally {
       setLoading(false);
     }
@@ -80,14 +97,14 @@ export default function ProfileScreen() {
         <View style={styles.userInfo}>
           <Avatar.Text
             size={64}
-            label={DEMO_USER.username.substring(0, 2).toUpperCase()}
+            label={user?.username?.substring(0, 2).toUpperCase() || 'U'}
             style={styles.avatar}
           />
           <View style={styles.userDetails}>
-            <Title style={styles.username}>{DEMO_USER.username}</Title>
-            <Text style={styles.email}>{DEMO_USER.email}</Text>
+            <Title style={styles.username}>{user?.username || 'User'}</Title>
+            <Text style={styles.email}>{user?.email || 'No email'}</Text>
             <Text style={styles.joinDate}>
-              Member since {formatDate(DEMO_USER.joinDate)}
+              Member since {formatDate(new Date(user?.createdAt || Date.now()))}
             </Text>
           </View>
         </View>
@@ -96,10 +113,10 @@ export default function ProfileScreen() {
           <View style={styles.rankInfo}>
             <Text style={styles.rankLabel}>Season Rank</Text>
             <Text style={styles.rankValue}>
-              {formatRank(userRank.userRank)}
+              {userRank.rank === 999 ? 'New User' : formatRank(userRank.rank)}
             </Text>
             <Text style={styles.rankTotal}>
-              of {userRank.totalUsers}
+              {userRank.rank === 999 ? 'Start trading to rank!' : `of ${userRank.totalUsers}`}
             </Text>
           </View>
         )}
@@ -353,6 +370,24 @@ export default function ProfileScreen() {
         >
           About App
         </Button>
+
+        <Button
+          mode="outlined"
+          onPress={() => {
+            Alert.alert(
+              'Logout',
+              'Are you sure you want to logout?',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Logout', style: 'destructive', onPress: logout }
+              ]
+            );
+          }}
+          style={styles.logoutButton}
+          labelStyle={styles.logoutButtonText}
+        >
+          Logout
+        </Button>
       </Card.Content>
     </Card>
   );
@@ -538,5 +573,12 @@ const styles = StyleSheet.create({
   },
   aboutButton: {
     marginTop: 4,
+  },
+  logoutButton: {
+    marginTop: 16,
+    borderColor: theme.colors.error,
+  },
+  logoutButtonText: {
+    color: theme.colors.error,
   },
 });

@@ -30,7 +30,7 @@ export default function SeasonPortfolioScreen() {
   const navigation = useNavigation();
   const { portfolio, loading, error, refreshPortfolio, updateHoldingPrice } = usePortfolio();
   const { priceUpdates, isConnected, joinRoom } = useSocket();
-  const { players } = useGame();
+  const { players, executeTrade } = useGame();
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -53,6 +53,32 @@ export default function SeasonPortfolioScreen() {
     setRefreshing(true);
     await refreshPortfolio();
     setRefreshing(false);
+  };
+
+  const handleSell = async (holding: Holding) => {
+    try {
+      console.log('📉 Selling holding:', holding);
+      
+      const tradeRequest = {
+        playerId: holding.playerId,
+        type: 'sell' as const,
+        shares: holding.shares,
+        orderType: 'market' as const,
+        accountType: 'season' as const
+      };
+
+      console.log('📉 Executing sell trade:', tradeRequest);
+      const trade = await executeTrade(tradeRequest);
+      
+      console.log('✅ Sell trade executed successfully:', trade);
+      
+      // The portfolio will be automatically refreshed by the executeTrade function
+      // which calls refreshPortfolio() after the trade
+      
+    } catch (error) {
+      console.error('❌ Error selling holding:', error);
+      Alert.alert('Error', 'Failed to sell holding. Please try again.');
+    }
   };
 
   const renderHolding = ({ item }: { item: Holding }) => {
@@ -106,6 +132,22 @@ export default function SeasonPortfolioScreen() {
                 {isGain ? '+' : ''}{formatCurrency(item.unrealizedPL)}
               </Text>
             </View>
+          </View>
+
+          {/* Sell Button */}
+          <View style={styles.sellButtonContainer}>
+            <Button
+              mode="outlined"
+              onPress={() => handleSell(item)}
+              style={[
+                styles.sellButton,
+                { borderColor: theme.colors.bearish }
+              ]}
+              labelStyle={{ color: theme.colors.bearish }}
+              icon="trending-down"
+            >
+              Sell All ({item.shares} shares)
+            </Button>
           </View>
         </Card.Content>
       </Card>
@@ -435,5 +477,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 16,
     bottom: 16,
+  },
+  sellButtonContainer: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  sellButton: {
+    borderRadius: 8,
+    borderWidth: 1.5,
   },
 });

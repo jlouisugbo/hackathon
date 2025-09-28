@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LiveGame, Player, TradeRequest, Trade } from '@player-stock-market/shared';
 import { apiService } from '../services/api';
 import { usePortfolio } from './PortfolioContext';
@@ -10,6 +11,11 @@ interface GameContextType {
   error: string | null;
   refreshGame: () => Promise<void>;
   refreshPlayers: () => Promise<void>;
+  forceRefreshAll: () => Promise<void>;
+  clearAllData: () => Promise<void>;
+  forceRestart: () => Promise<void>;
+  clearAllStorage: () => Promise<void>;
+  clearCachedPlayers: () => Promise<void>;
   updatePlayerPrice: (playerId: string, newPrice: number, change: number, changePercent: number) => void;
   executeTrade: (tradeRequest: TradeRequest) => Promise<Trade>;
 }
@@ -28,10 +34,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const initializeGameData = async () => {
-    await Promise.all([
-      fetchCurrentGame(),
-      fetchPlayers()
-    ]);
+    console.log('🔄 Initializing game data...');
+    console.log('🔄 Current timestamp:', Date.now());
+    // Force refresh players first to ensure we get fresh data
+    await fetchPlayers();
+    await fetchCurrentGame();
     setLoading(false);
   };
 
@@ -53,15 +60,55 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const fetchPlayers = async () => {
     try {
+      console.log('🔄 Fetching players from API...');
+      console.log('🔄 Current timestamp:', Date.now());
+      
+      // Check if we have cached players in session storage first
+      try {
+        const cachedPlayers = await AsyncStorage.getItem('cached_players');
+        if (cachedPlayers) {
+          const parsedPlayers = JSON.parse(cachedPlayers);
+          console.log('📦 Using cached players from session storage:', parsedPlayers.length, 'players');
+          console.log('📋 Cached player IDs:', parsedPlayers.map(p => p.id));
+          setPlayers(parsedPlayers);
+          return;
+        }
+      } catch (error) {
+        console.log('📦 No cached players found, fetching fresh data');
+      }
+      
+      // Add cache-busting parameter to ensure fresh data
+      const timestamp = Date.now();
       const response = await apiService.getPlayers();
 
       if (response.success && response.data) {
+        console.log('✅ Players fetched successfully:', response.data.length, 'players');
+        console.log('📋 First few player IDs:', response.data.slice(0, 3).map(p => ({ id: p.id, name: p.name })));
+        console.log('📋 All player IDs:', response.data.map(p => p.id));
+        
+        // Store players in session storage for persistence
+        try {
+          await AsyncStorage.setItem('cached_players', JSON.stringify(response.data));
+          console.log('💾 Players cached in session storage');
+        } catch (error) {
+          console.error('❌ Failed to cache players:', error);
+        }
+        
+        // Force clear existing players first
+        setPlayers([]);
+        
+        // Wait a moment for state to clear
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Set fresh players
         setPlayers(response.data);
+        console.log('✅ Fresh players set in state');
       } else {
+        console.error('❌ Failed to fetch players:', response.error);
         setError(response.error || 'Failed to fetch players');
       }
     } catch (err) {
-      console.error('Error fetching players:', err);
+      console.error('❌ Error fetching players:', err);
       setError('Failed to fetch players');
     }
   };
@@ -71,7 +118,115 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refreshPlayers = async () => {
+    console.log('🔄 Force refreshing players...');
+    setPlayers([]); // Clear existing players first
+    setError(null); // Clear any errors
     await fetchPlayers();
+  };
+
+  const forceRefreshAll = async () => {
+    console.log('🔄 Force refreshing all game data...');
+    console.log('🔄 Clearing all cached data...');
+    setPlayers([]);
+    setCurrentGame(null);
+    setError(null);
+    setLoading(true);
+    
+    // Add a small delay to ensure state is cleared
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    console.log('🔄 Starting fresh data fetch...');
+    await initializeGameData();
+  };
+
+  const clearAllData = async () => {
+    console.log('🧹 Clearing game data and forcing refresh (preserving session data)...');
+    console.log('🧹 Current players before clear:', players.length);
+    console.log('🧹 Current player IDs before clear:', players.map(p => p.id));
+    
+    setPlayers([]);
+    setCurrentGame(null);
+    setError(null);
+    setLoading(true);
+    
+    // Wait a bit for state to clear
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Force fetch with cache busting
+    try {
+      console.log('🔄 Fetching fresh players with cache busting...');
+      const timestamp = Date.now();
+      const response = await apiService.getPlayers();
+      
+      if (response.success && response.data) {
+        console.log('✅ Fresh players fetched:', response.data.length, 'players');
+        console.log('📋 Fresh player IDs:', response.data.map(p => ({ id: p.id, name: p.name })));
+        
+        setPlayers(response.data);
+        setError(null);
+      } else {
+        console.error('❌ Failed to fetch fresh players:', response.error);
+        setError(response.error || 'Failed to fetch fresh players');
+      }
+    } catch (err) {
+      console.error('❌ Error fetching fresh players:', err);
+      setError('Failed to fetch fresh players');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const forceRestart = async () => {
+    console.log('🔄 FORCE RESTART: Completely restarting game context...');
+    console.log('🔄 This will clear ALL data and force fresh fetch...');
+    
+    // Clear everything
+    setPlayers([]);
+    setCurrentGame(null);
+    setError(null);
+    setLoading(true);
+    
+    // Wait longer for complete state clear
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Force fresh initialization
+    await initializeGameData();
+  };
+
+  const clearAllStorage = async () => {
+    console.log('🧹 CLEARING ALL STORAGE: Removing all cached data...');
+    
+    try {
+      // Clear all AsyncStorage data
+      await AsyncStorage.clear();
+      console.log('✅ All AsyncStorage data cleared');
+      
+      // Clear all state
+      setPlayers([]);
+      setCurrentGame(null);
+      setError(null);
+      setLoading(true);
+      
+      // Wait for complete clearing
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Force fresh initialization
+      await initializeGameData();
+      
+      console.log('✅ Complete storage and state reset completed');
+    } catch (error) {
+      console.error('❌ Error clearing storage:', error);
+    }
+  };
+
+  const clearCachedPlayers = async () => {
+    console.log('🧹 Clearing cached players...');
+    try {
+      await AsyncStorage.removeItem('cached_players');
+      console.log('✅ Cached players cleared');
+    } catch (error) {
+      console.error('❌ Error clearing cached players:', error);
+    }
   };
 
   const updatePlayerPrice = (playerId: string, newPrice: number, change: number, changePercent: number) => {
@@ -109,52 +264,53 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
       console.log('🔄 Executing trade:', tradeRequest);
-      const response = await apiService.executeMarketOrder(tradeRequest);
+      console.log('🎯 Trade details:', {
+        playerId: tradeRequest.playerId,
+        type: tradeRequest.type,
+        shares: tradeRequest.shares,
+        accountType: tradeRequest.accountType
+      });
+
+      // Validate that the player exists in our current player list
+      const playerExists = players.find(p => p.id === tradeRequest.playerId);
+      if (!playerExists) {
+        console.error('❌ Player not found in current player list:', tradeRequest.playerId);
+        console.log('📋 Available player IDs:', players.map(p => p.id));
+        console.log('🔄 Attempting to refresh player data...');
+        
+        // Try to refresh player data and check again
+        await fetchPlayers();
+        const refreshedPlayerExists = players.find(p => p.id === tradeRequest.playerId);
+        if (!refreshedPlayerExists) {
+          throw new Error(`Player with ID ${tradeRequest.playerId} not found. Please refresh the app.`);
+        }
+      }
+      
+      // Add timeout to prevent hanging requests
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 10000)
+      );
+      
+      const tradePromise = apiService.executeMarketOrder(tradeRequest);
+      const response = await Promise.race([tradePromise, timeoutPromise]) as any;
 
       if (response.success && response.data) {
         console.log('✅ Trade executed successfully:', response.data);
         console.log(`💰 ${tradeRequest.type.toUpperCase()} ${tradeRequest.shares} shares of ${response.data.playerName} for $${response.data.totalAmount.toFixed(2)}`);
         
-        // Add the trade to user's portfolio
-        if (tradeRequest.type === 'buy') {
-          console.log('🛒 BUY TRADE - Creating holding:', {
-            playerId: tradeRequest.playerId,
-            shares: tradeRequest.shares,
-            totalAmount: response.data.totalAmount
-          });
-          
-          const holding = {
-            playerId: tradeRequest.playerId,
-            playerName: response.data.playerName,
-            shares: tradeRequest.shares,
-            averagePrice: response.data.price,
-            currentPrice: response.data.price,
-            totalValue: response.data.totalAmount,
-            unrealizedPL: 0,
-            unrealizedPLPercent: 0,
-            purchaseDate: Date.now(),
-            daysSinceHeld: 0,
-            holdingBonus: 0,
-            holdingMultiplier: 1,
-            // Add unique identifier to prevent React key conflicts
-            id: `trade-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${Math.random().toString(36).substr(2, 9)}-${Math.random().toString(36).substr(2, 9)}`
-          };
-          
-          console.log('🛒 BUY TRADE - Calling addUserTrade with:', holding);
-          addUserTrade(holding, tradeRequest.accountType);
-          
-          console.log('🛒 BUY TRADE - Calling updateCashBalance with amount:', response.data.totalAmount);
-          updateCashBalance(response.data.totalAmount, 'buy');
-        } else if (tradeRequest.type === 'sell') {
-          // For sells, we need to remove shares from existing holdings
-          // This will be handled by the portfolio refresh from the backend
-          console.log('📉 Sell trade executed, portfolio will be updated via refresh');
-          // Update cash balance (increase for sell)
-          updateCashBalance(response.data.totalAmount, 'sell');
-        }
+        // The backend has already updated the portfolio in the database
+        // We just need to refresh the portfolio from the backend
+        console.log('✅ Trade executed successfully by backend');
+        console.log('🔄 Refreshing portfolio from backend to get updated data...');
         
-        // Portfolio will update when user navigates to portfolio tab
-        console.log('✅ Trade completed - portfolio will update on next view');
+        // Refresh portfolio from backend to get the updated holdings
+        try {
+          await refreshPortfolio();
+          console.log('✅ Portfolio refreshed from backend');
+        } catch (refreshError) {
+          console.error('❌ Failed to refresh portfolio from backend:', refreshError);
+          // Don't fail the trade if portfolio refresh fails
+        }
         
         return response.data;
       } else {
@@ -176,6 +332,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     error,
     refreshGame,
     refreshPlayers,
+    forceRefreshAll,
+    clearAllData,
+    forceRestart,
+    clearAllStorage,
+    clearCachedPlayers,
     updatePlayerPrice,
     executeTrade,
   };

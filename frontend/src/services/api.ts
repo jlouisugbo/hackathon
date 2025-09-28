@@ -32,9 +32,10 @@ class ApiService {
 
     // Get auth token if available
     const token = await AsyncStorage.getItem('auth_token');
+    const userId = await AsyncStorage.getItem('user_id');
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'user-id': 'demo-user', // Demo fallback
+      'user-id': userId || 'demo-user', // Use actual user ID or demo fallback
     };
 
     // Add any additional headers from options
@@ -156,7 +157,7 @@ class ApiService {
 
   // Trade endpoints
   async executeMarketOrder(tradeRequest: TradeRequest): Promise<ApiResponse<Trade>> {
-    return this.makeRequest('/api/trades/market', {
+    return this.makeRequest('/api/trades', {
       method: 'POST',
       body: JSON.stringify(tradeRequest),
     });

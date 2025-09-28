@@ -21,6 +21,9 @@ import LeaderboardScreen from './src/screens/LeaderboardScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import MarketDashboard from './src/screens/MarketDashboard';
 
+// Components
+import AuthFlow from './src/components/AuthFlow';
+
 // Theme
 import { theme } from './src/theme/theme';
 
@@ -123,9 +126,9 @@ function AppContent() {
     );
   }
 
-  // Show auth screen only if explicitly no user after loading is complete
+  // Show auth flow if no user is authenticated
   if (!user) {
-    return <AuthScreen />;
+    return <AuthFlow onAuthSuccess={() => {}} />;
   }
 
   return (

@@ -37,7 +37,7 @@ const { width } = Dimensions.get('window');
 export default function MarketDashboard() {
   const { portfolio, loading, error, refreshPortfolio } = usePortfolio();
   const { priceUpdates, isConnected, joinRoom, flashMultipliers, gameEvents } = useSocket();
-  const { players, executeTrade } = useGame();
+  const { players, executeTrade, clearAllData, forceRestart, clearAllStorage, refreshPlayers, clearCachedPlayers } = useGame();
 
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -86,8 +86,22 @@ export default function MarketDashboard() {
 
   const onRefresh = async () => {
     setRefreshing(true);
+    console.log('🔄 MarketDashboard: Manual refresh triggered');
+    console.log('📋 Current players count:', players.length);
+    console.log('📋 Current player IDs:', players.map(p => ({ id: p.id, name: p.name })));
+    
+    // Use gentle refresh that preserves session data
+    console.log('🔄 Using gentle refresh to preserve session data...');
+    await clearAllData();
+    
     await refreshPortfolio();
     setRefreshing(false);
+  };
+
+  const handleClearCacheAndRefresh = async () => {
+    console.log('🧹 Clearing cached players and refreshing...');
+    await clearCachedPlayers();
+    await refreshPlayers();
   };
 
   const handlePlayerPress = (player: Player) => {

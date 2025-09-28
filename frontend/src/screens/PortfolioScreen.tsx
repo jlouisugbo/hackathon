@@ -37,7 +37,7 @@ const { width } = Dimensions.get('window');
 export default function PortfolioScreen() {
   const { portfolio, loading, error, refreshPortfolio, updatePortfolioValues } = usePortfolio();
   const { priceUpdates, isConnected, joinRoom } = useSocket();
-  const { players } = useGame();
+  const { players, executeTrade } = useGame();
 
   const [refreshing, setRefreshing] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'season' | 'live'>('season');
@@ -53,9 +53,16 @@ export default function PortfolioScreen() {
   useEffect(() => {
     if (portfolio && players.length > 0) {
       console.log('🔄 Updating portfolio values with current player prices...');
+      console.log('📊 Current portfolio holdings:', portfolio.seasonHoldings?.length || 0, 'season', portfolio.liveHoldings?.length || 0, 'live');
       updatePortfolioValues(players);
     }
   }, [portfolio, players, updatePortfolioValues]);
+
+  // Force refresh when component mounts to ensure we have latest data
+  useEffect(() => {
+    console.log('🔄 PortfolioScreen mounted, refreshing portfolio...');
+    refreshPortfolio();
+  }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -63,9 +70,42 @@ export default function PortfolioScreen() {
     setRefreshing(false);
   };
 
+  const handleSell = async (holding: Holding) => {
+    try {
+      console.log('📉 Selling holding:', holding);
+      
+      const tradeRequest = {
+        playerId: holding.playerId,
+        type: 'sell' as const,
+        shares: holding.shares,
+        orderType: 'market' as const,
+        accountType: selectedTab as 'season' | 'live'
+      };
+
+      console.log('📉 Executing sell trade:', tradeRequest);
+      const trade = await executeTrade(tradeRequest);
+      
+      console.log('✅ Sell trade executed successfully:', trade);
+      
+      // The portfolio will be automatically refreshed by the executeTrade function
+      // which calls refreshPortfolio() after the trade
+      
+    } catch (error) {
+      console.error('❌ Error selling holding:', error);
+      // You could add a toast notification here
+    }
+  };
+
   const currentHoldings = selectedTab === 'season'
     ? portfolio?.seasonHoldings || []
     : portfolio?.liveHoldings || [];
+
+  // Debug logging
+  console.log('📊 PortfolioScreen render - selectedTab:', selectedTab, 'holdings:', currentHoldings.length);
+  console.log('📊 Season holdings:', portfolio?.seasonHoldings?.length || 0);
+  console.log('📊 Live holdings:', portfolio?.liveHoldings?.length || 0);
+  console.log('📊 Current holdings data:', currentHoldings);
+  console.log('📊 Portfolio data:', portfolio);
 
   const currentPL = selectedTab === 'season'
     ? portfolio?.seasonPL || 0
@@ -246,6 +286,11 @@ export default function PortfolioScreen() {
                       : 'Make live trades during games to see holdings here'
                     }
                   </Text>
+                  <Text style={styles.debugText}>
+                    Debug: Portfolio loaded: {portfolio ? 'Yes' : 'No'}, 
+                    Holdings: {currentHoldings.length}, 
+                    Tab: {selectedTab}
+                  </Text>
                 </View>
               </Surface>
             ) : (
@@ -305,6 +350,22 @@ export default function PortfolioScreen() {
                             {isPositive ? '+' : ''}{formatCurrency(holding.unrealizedPL)}
                           </Text>
                         </View>
+                      </View>
+
+                      {/* Sell Button */}
+                      <View style={styles.sellButtonContainer}>
+                        <Button
+                          mode="outlined"
+                          onPress={() => handleSell(holding)}
+                          style={[
+                            styles.sellButton,
+                            { borderColor: theme.colors.bearish }
+                          ]}
+                          labelStyle={{ color: theme.colors.bearish }}
+                          icon="trending-down"
+                        >
+                          Sell All ({holding.shares} shares)
+                        </Button>
                       </View>
 
                       {/* Mini Chart */}
@@ -727,5 +788,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: theme.colors.neutral,
     fontWeight: '600',
+  },
+  sellButtonContainer: {
+    marginTop: 12,
+    alignItems: 'center',
+  },
+  sellButton: {
+    borderRadius: 8,
+    borderWidth: 1.5,
+  },
+  debugText: {
+    fontSize: 12,
+    color: theme.colors.neutral,
+    marginTop: 8,
+    textAlign: 'center',
   },
 });

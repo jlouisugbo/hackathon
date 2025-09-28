@@ -37,22 +37,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkExistingAuth = async () => {
     try {
-      const storedToken = await AsyncStorage.getItem(TOKEN_KEY);
-      const storedUser = await AsyncStorage.getItem(USER_KEY);
-
-      if (storedToken && storedUser) {
-        const userData = JSON.parse(storedUser);
-        // For demo mode, just use stored data without verification
-        setToken(storedToken);
-        setUser(userData);
-      } else {
-        // Auto-login demo user if no auth data exists
-        await loginDemoUser();
-      }
+      // Clear any existing auth data to force login screen
+      await AsyncStorage.removeItem(TOKEN_KEY);
+      await AsyncStorage.removeItem(USER_KEY);
+      console.log('🧹 Cleared stored auth data to show login screen');
+      
+      // Don't set any user data - this will show the login screen
+      setToken(null);
+      setUser(null);
     } catch (error) {
       console.error('Error checking existing auth:', error);
-      // Fallback to demo user
-      await loginDemoUser();
     } finally {
       setLoading(false);
     }
@@ -95,6 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Store auth data
         await AsyncStorage.setItem(TOKEN_KEY, authToken);
         await AsyncStorage.setItem(USER_KEY, JSON.stringify(userData));
+        await AsyncStorage.setItem('user_id', userData.id);
 
         setToken(authToken);
         setUser(userData);
@@ -120,6 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Store auth data
         await AsyncStorage.setItem(TOKEN_KEY, authToken);
         await AsyncStorage.setItem(USER_KEY, JSON.stringify(userData));
+        await AsyncStorage.setItem('user_id', userData.id);
 
         setToken(authToken);
         setUser(userData);
@@ -147,6 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const clearAuthData = async () => {
     await AsyncStorage.removeItem(TOKEN_KEY);
     await AsyncStorage.removeItem(USER_KEY);
+    await AsyncStorage.removeItem('user_id');
   };
 
   const value: AuthContextType = {
