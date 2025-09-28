@@ -12,6 +12,8 @@ import {
   Text,
   ActivityIndicator,
   FAB,
+  TextInput,
+  Button,
 } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -20,6 +22,7 @@ import * as Haptics from 'expo-haptics';
 import PlayerCard from '../components/PlayerCard';
 import TradeModal from '../components/TradeModal';
 import LiveChat from '../components/LiveChat';
+import { useRef } from 'react';
 
 // Contexts
 import { useGame } from '../context/GameContext';
@@ -27,11 +30,17 @@ import { useSocket } from '../context/SocketContext';
 import { usePortfolio } from '../context/PortfolioContext';
 import { theme } from '../theme/theme';
 import { formatCurrency, formatPercent } from '../utils/formatters';
-import { Player, TradeRequest, FlashMultiplier } from '../../../../shared/src/types';
+import { Player, TradeRequest, FlashMultiplier } from '@player-stock-market/shared';
 
 const { width } = Dimensions.get('window');
 
 export default function LiveTradingScreen() {
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterMultiplier, setFilterMultiplier] = useState(false);
+  // Notification badge state for chat
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const chatRef = useRef<any>(null);
   const { players, loading, executeTrade } = useGame();
   const {
     flashMultipliers,
@@ -47,6 +56,22 @@ export default function LiveTradingScreen() {
   const [tradeType, setTradeType] = useState<'buy' | 'sell'>('buy');
   const [refreshing, setRefreshing] = useState(false);
   const [chatVisible, setChatVisible] = useState(false);
+  // Listen for new chat messages via WebSocket
+  useEffect(() => {
+    if (!chatVisible && window && window.addEventListener) {
+      // Listen for custom event from LiveChat
+      const handler = (e: any) => {
+        setUnreadMessages((prev) => prev + 1);
+      };
+      window.addEventListener('livechat:new_message', handler);
+      return () => window.removeEventListener('livechat:new_message', handler);
+    }
+  }, [chatVisible]);
+
+  // Reset unread count when chat is opened
+  useEffect(() => {
+    if (chatVisible) setUnreadMessages(0);
+  }, [chatVisible]);
 
   useEffect(() => {
     if (isConnected) {
@@ -161,8 +186,25 @@ export default function LiveTradingScreen() {
           <Text style={styles.flashTitle}>⚡ FLASH MULTIPLIERS ACTIVE</Text>
         </View>
 
+<<<<<<< HEAD
         {Array.from(flashMultipliers.values()).map((flash: FlashMultiplier, index) => (
           <View key={`${flash.playerId}-${index}`} style={styles.flashItem}>
+=======
+        {Array.from(flashMultipliers.values()).map((flash: FlashMultiplier) => (
+          <View
+            key={flash.playerId}
+            style={styles.flashItem}
+            onTouchEnd={() => {
+              // Open trade modal for player when notification is clicked
+              const player = players.find(p => p.id === flash.playerId);
+              if (player) {
+                setSelectedPlayer(player);
+                setTradeType('buy');
+                setTradeModalVisible(true);
+              }
+            }}
+          >
+>>>>>>> 9790dcde3109e1967743b402af1851c88dc808fc
             <View style={styles.flashContent}>
               <Text style={styles.flashPlayerName}>{flash.playerName}</Text>
               <Text style={styles.flashDescription}>{flash.eventDescription}</Text>
@@ -187,9 +229,30 @@ export default function LiveTradingScreen() {
     }
 
     // Filter for active players if game is live, otherwise show all
-    const displayPlayers = liveGame
+    let displayPlayers = liveGame
       ? players.filter(p => liveGame.activePlayers.includes(p.id))
       : players;
+
+    // Filter by search query
+    if (searchQuery) {
+      displayPlayers = displayPlayers.filter(p =>
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.team.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Filter by multiplier
+    if (filterMultiplier) {
+      displayPlayers = displayPlayers.filter(p => flashMultipliers.has(p.id));
+    }
+
+    // Sort so players with active multipliers are at the top
+    displayPlayers = [...displayPlayers].sort((a, b) => {
+      const aHas = flashMultipliers.has(a.id);
+      const bHas = flashMultipliers.has(b.id);
+      if (aHas === bHas) return 0;
+      return aHas ? -1 : 1;
+    });
 
     return (
       <View style={styles.playersSection}>
@@ -200,6 +263,27 @@ export default function LiveTradingScreen() {
           <Text style={styles.sectionSubtitle}>
             {displayPlayers.length} players available
           </Text>
+        </View>
+
+        {/* Search and filter bar */}
+        <View style={{ flexDirection: 'row', marginBottom: 12, gap: 8 }}>
+          <View style={{ flex: 1 }}>
+            <TextInput
+              placeholder="Search players or teams..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              style={{ backgroundColor: theme.colors.surfaceVariant, borderRadius: 8, paddingHorizontal: 12 }}
+              dense
+            />
+          </View>
+          <Button
+            mode={filterMultiplier ? 'contained' : 'outlined'}
+            onPress={() => setFilterMultiplier(f => !f)}
+            style={{ borderRadius: 8 }}
+            compact
+          >
+            Multiplier
+          </Button>
         </View>
 
         <View style={styles.playersGrid}>
@@ -288,15 +372,20 @@ export default function LiveTradingScreen() {
         tradesRemaining={portfolio?.tradesRemaining || 0}
       />
 
-      {/* Chat FAB */}
-      {liveGame && (
+      {/* Chat FAB - always visible */}
+      <View>
         <FAB
           icon="chat"
           style={styles.chatFAB}
           onPress={() => setChatVisible(true)}
           label="Chat"
         />
-      )}
+        {unreadMessages > 0 && (
+          <View style={styles.chatBadge}>
+            <Text style={styles.chatBadgeText}>{unreadMessages}</Text>
+          </View>
+        )}
+      </View>
 
       {/* Live Chat Modal */}
       <LiveChat
@@ -308,6 +397,24 @@ export default function LiveTradingScreen() {
 }
 
 const styles = StyleSheet.create({
+  chatBadge: {
+    position: 'absolute',
+    right: 10,
+    bottom: 60,
+    backgroundColor: theme.colors.error,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  chatBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+    paddingHorizontal: 4,
+  },
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,

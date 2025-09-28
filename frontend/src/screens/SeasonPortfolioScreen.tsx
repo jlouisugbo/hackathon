@@ -363,8 +363,7 @@ const styles = StyleSheet.create({
   },
   holdingCard: {
     marginBottom: 12,
-    width: '100%',
-    maxWidth: 400,
+    width: 400,
     alignSelf: 'center',
   },
   holdingHeader: {

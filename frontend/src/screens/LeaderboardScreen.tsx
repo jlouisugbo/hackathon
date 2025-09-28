@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     backgroundColor: theme.colors.cardBg,
     borderColor: theme.colors.cardBorder,
-    width: '100%',
+    width: 400,
     alignSelf: 'center',
   },
   entryContent: {
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 8,
+    marginHorizontal: 4,
   },
   avatar: {
     marginRight: 10,
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   username: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '700',
     marginBottom: 4,
     color: theme.colors.onSurface,

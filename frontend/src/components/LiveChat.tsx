@@ -66,10 +66,23 @@ export default function LiveChat({ visible, onClose }: LiveChatProps) {
 
     // Listen for chat messages
     const handleChatMessage = (message: ChatMessage) => {
-      setMessages(prev => [...prev, message].slice(-50)); // Keep last 50 messages
+      setMessages(prev => {
+        // Deduplicate consecutive messages with same id and content
+        if (prev.length > 0) {
+          const last = prev[prev.length - 1];
+          if (last.id === message.id && last.message === message.message) {
+            return prev;
+          }
+        }
+        return [...prev, message].slice(-50);
+      });
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 100);
+      // Dispatch notification event if chat is closed
+      if (!visible && typeof window !== 'undefined' && window.dispatchEvent) {
+        window.dispatchEvent(new CustomEvent('livechat:new_message'));
+      }
     };
 
     // Listen for trade feed updates
@@ -113,7 +126,16 @@ export default function LiveChat({ visible, onClose }: LiveChatProps) {
         timestamp: event.timestamp,
         type: 'system'
       };
-      setMessages(prev => [...prev, gameMessage].slice(-50));
+      setMessages(prev => {
+        // Prevent duplicates: ignore if a message with same id already exists
+        if (prev.some(m => m.id === gameMessage.id)) return prev;
+        const next = [...prev, gameMessage].slice(-50);
+        // scroll to bottom shortly after adding
+        setTimeout(() => {
+          scrollViewRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+        return next;
+      });
     };
 
     socket.on('chat_message', handleChatMessage);
@@ -420,11 +442,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  tradeUsername: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.colors.onSurface,
   },
   tradeTypeChip: {
     height: 24,
