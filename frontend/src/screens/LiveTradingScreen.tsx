@@ -187,7 +187,7 @@ export default function LiveTradingScreen() {
 
         {Array.from(flashMultipliers.values()).map((flash: FlashMultiplier, index) => (
           <View
-            key={`flash-${flash.playerId}-${flash.startTime}-${flash.duration}-${index}`}
+            key={`flash-multipliers-${flash.playerId}-${flash.startTime}-${flash.duration}-${index}`}
             style={styles.flashItem}
             onTouchEnd={() => {
               // Open trade modal for player when notification is clicked
@@ -237,7 +237,7 @@ export default function LiveTradingScreen() {
             const hasFlashMultiplier = flashMultipliers.has(holding.playerId);
 
             return (
-              <View key={`live-holding-${holding.playerId}-${holding.shares}-${holding.purchaseDate}-${holding.averagePrice}-${index}`} style={styles.holdingCard}>
+              <View key={`live-holdings-${holding.playerId}-${holding.shares}-${holding.purchaseDate}-${index}`} style={styles.holdingCard}>
                 <View style={styles.holdingHeader}>
                   <View style={styles.holdingLeft}>
                     <Text style={styles.holdingPlayerName}>{holding.playerName}</Text>
@@ -365,7 +365,7 @@ export default function LiveTradingScreen() {
 
             return (
               <View
-                key={`live-player-${player.id}-${player.name}-${player.currentPrice}-${index}`}
+                key={`live-players-${player.id}-${player.currentPrice}-${index}`}
                 style={styles.playerCardWrapper}
               >
                 <PlayerCard
@@ -391,7 +391,7 @@ export default function LiveTradingScreen() {
         <Text style={styles.sectionTitle}>Recent Events</Text>
 
         {gameEvents.slice(0, 3).map((event, index) => (
-          <View key={`live-event-${event.id}-${index}`} style={styles.eventItem}>
+          <View key={`live-events-${event.id}-${index}`} style={styles.eventItem}>
             <View style={styles.eventContent}>
               <Text style={styles.eventDescription}>{event.description}</Text>
               <Text style={styles.eventTime}>Q{event.quarter} • {event.gameTime}</Text>
@@ -439,6 +439,7 @@ export default function LiveTradingScreen() {
         player={selectedPlayer}
         tradeType={tradeType}
         availableBalance={portfolio?.availableBalance || 0}
+        currentHolding={selectedPlayer ? (portfolio?.liveHoldings?.find(h => h.playerId === selectedPlayer.id)?.shares || 0) : 0}
         onClose={() => setTradeModalVisible(false)}
         onConfirmTrade={handleConfirmTrade}
         isLive={true}

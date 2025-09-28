@@ -199,9 +199,9 @@ export default function TradeModal({
 
                 {/* Quick Amount Buttons */}
                 <View style={styles.quickAmountsRow}>
-                  {getValidQuickAmounts().map((amount) => (
+                  {getValidQuickAmounts().map((amount, index) => (
                     <Chip
-                      key={amount}
+                      key={`quick-amount-${amount}-${index}`}
                       onPress={() => setShares(amount.toString())}
                       style={styles.quickAmountChip}
                       textStyle={styles.quickAmountText}
