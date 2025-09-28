@@ -56,6 +56,32 @@ export class DatabaseService {
     }
   }
 
+  async createPortfolio(userId: string, portfolio: Portfolio): Promise<boolean> {
+    try {
+      if (!isSupabaseConfigured) {
+        return false; // Fallback to mock data
+      }
+
+      const { error } = await supabase
+        .from(TABLES.PORTFOLIOS)
+        .insert({
+          user_id: userId,
+          available_balance: portfolio.availableBalance,
+          total_value: portfolio.totalValue,
+          todays_pl: portfolio.todaysPL,
+          season_pl: portfolio.seasonPL,
+          live_pl: portfolio.livePL,
+          trades_remaining: portfolio.tradesRemaining,
+          last_updated: new Date().toISOString()
+        });
+
+      return !error;
+    } catch (error) {
+      console.error('Error creating portfolio:', error);
+      return false;
+    }
+  }
+
   async updatePortfolio(userId: string, updates: Partial<Portfolio>): Promise<boolean> {
     try {
       if (!isSupabaseConfigured) {

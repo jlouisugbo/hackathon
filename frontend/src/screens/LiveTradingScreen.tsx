@@ -185,9 +185,9 @@ export default function LiveTradingScreen() {
           <Text style={styles.flashTitle}>⚡ FLASH MULTIPLIERS ACTIVE</Text>
         </View>
 
-        {Array.from(flashMultipliers.values()).map((flash: FlashMultiplier) => (
+        {Array.from(flashMultipliers.values()).map((flash: FlashMultiplier, index) => (
           <View
-            key={flash.playerId}
+            key={`${flash.playerId}-${flash.startTime}-${index}`}
             style={styles.flashItem}
             onTouchEnd={() => {
               // Open trade modal for player when notification is clicked

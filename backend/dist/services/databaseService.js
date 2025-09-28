@@ -51,6 +51,30 @@ class DatabaseService {
             return null;
         }
     }
+    async createPortfolio(userId, portfolio) {
+        try {
+            if (!supabase_1.isSupabaseConfigured) {
+                return false; // Fallback to mock data
+            }
+            const { error } = await supabase_1.supabase
+                .from(supabase_1.TABLES.PORTFOLIOS)
+                .insert({
+                user_id: userId,
+                available_balance: portfolio.availableBalance,
+                total_value: portfolio.totalValue,
+                todays_pl: portfolio.todaysPL,
+                season_pl: portfolio.seasonPL,
+                live_pl: portfolio.livePL,
+                trades_remaining: portfolio.tradesRemaining,
+                last_updated: new Date().toISOString()
+            });
+            return !error;
+        }
+        catch (error) {
+            console.error('Error creating portfolio:', error);
+            return false;
+        }
+    }
     async updatePortfolio(userId, updates) {
         try {
             if (!supabase_1.isSupabaseConfigured) {

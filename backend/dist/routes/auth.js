@@ -134,7 +134,11 @@ router.post('/demo-login', async (req, res) => {
             season_rank: 0,
             live_rank: 0
         });
-        createDemoPortfolio(userId);
+        // Create portfolio in mock data
+        const portfolio = createDemoPortfolio(userId);
+        // Also create portfolio in database
+        const { databaseService } = require('../services/databaseService');
+        await databaseService.createPortfolio(userId, portfolio);
         const token = authService_1.authService.generateToken(user);
         const response = {
             success: true,

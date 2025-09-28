@@ -54,7 +54,7 @@ interface LiveChatProps {
 }
 
 export default function LiveChat({ visible, onClose }: LiveChatProps) {
-  const { socket, isConnected } = useSocket();
+  const { socket, isConnected, sendChatMessage } = useSocket();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [tradeFeed, setTradeFeed] = useState<TradeFeedItem[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -66,6 +66,7 @@ export default function LiveChat({ visible, onClose }: LiveChatProps) {
 
     // Listen for chat messages
     const handleChatMessage = (message: ChatMessage) => {
+      console.log('💬 Chat message received:', message);
       setMessages(prev => {
         // Deduplicate consecutive messages with same id and content
         if (prev.length > 0) {
@@ -152,9 +153,10 @@ export default function LiveChat({ visible, onClose }: LiveChatProps) {
   }, [socket, visible]);
 
   const sendMessage = () => {
-    if (!socket || !inputMessage.trim()) return;
+    if (!inputMessage.trim()) return;
 
-    socket.emit('send_chat_message', inputMessage.trim());
+    console.log('💬 Sending chat message:', inputMessage.trim());
+    sendChatMessage(inputMessage.trim());
     setInputMessage('');
   };
 
