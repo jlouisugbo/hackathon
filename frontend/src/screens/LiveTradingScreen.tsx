@@ -187,7 +187,7 @@ export default function LiveTradingScreen() {
 
         {Array.from(flashMultipliers.values()).map((flash: FlashMultiplier, index) => (
           <View
-            key={`${flash.playerId}-${flash.startTime}-${index}`}
+            key={`flash-${flash.playerId}-${flash.startTime}-${flash.duration}-${index}`}
             style={styles.flashItem}
             onTouchEnd={() => {
               // Open trade modal for player when notification is clicked
@@ -237,7 +237,7 @@ export default function LiveTradingScreen() {
             const hasFlashMultiplier = flashMultipliers.has(holding.playerId);
 
             return (
-              <View key={`live-${holding.playerId}-${holding.shares}-${holding.purchaseDate}-${index}`} style={styles.holdingCard}>
+              <View key={`live-holding-${holding.playerId}-${holding.shares}-${holding.purchaseDate}-${holding.averagePrice}-${index}`} style={styles.holdingCard}>
                 <View style={styles.holdingHeader}>
                   <View style={styles.holdingLeft}>
                     <Text style={styles.holdingPlayerName}>{holding.playerName}</Text>
@@ -365,7 +365,7 @@ export default function LiveTradingScreen() {
 
             return (
               <View
-                key={`player-${player.id}-${player.name}-${index}`}
+                key={`live-player-${player.id}-${player.name}-${player.currentPrice}-${index}`}
                 style={styles.playerCardWrapper}
               >
                 <PlayerCard
@@ -384,14 +384,14 @@ export default function LiveTradingScreen() {
   };
 
   const renderRecentEvents = () => {
-    if (gameEvents.length === 0 || !currentGame) return null;
+    if (gameEvents.length === 0) return null;
 
     return (
       <View style={styles.eventsSection}>
         <Text style={styles.sectionTitle}>Recent Events</Text>
 
-        {gameEvents.slice(0, 3).map((event) => (
-          <View key={event.id} style={styles.eventItem}>
+        {gameEvents.slice(0, 3).map((event, index) => (
+          <View key={`live-event-${event.id}-${index}`} style={styles.eventItem}>
             <View style={styles.eventContent}>
               <Text style={styles.eventDescription}>{event.description}</Text>
               <Text style={styles.eventTime}>Q{event.quarter} • {event.gameTime}</Text>
