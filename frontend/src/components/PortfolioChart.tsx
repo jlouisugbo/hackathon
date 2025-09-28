@@ -15,6 +15,21 @@ interface PortfolioChartProps {
 }
 
 export default function PortfolioChart({ data, title = 'Portfolio Performance' }: PortfolioChartProps) {
+  console.log('📈 PortfolioChart rendering with data:', data);
+  
+  // Validate data
+  if (!data || !data.labels || !data.values || data.values.length === 0) {
+    console.log('❌ Invalid chart data:', data);
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={{ color: 'red', textAlign: 'center', marginTop: 20 }}>
+          No chart data available
+        </Text>
+      </View>
+    );
+  }
+  
   const chartConfig = {
     backgroundColor: theme.colors.surface,
     backgroundGradientFrom: theme.colors.surface,
@@ -46,27 +61,41 @@ export default function PortfolioChart({ data, title = 'Portfolio Performance' }
       },
     ],
   };
+  
+  console.log('📊 Chart data prepared:', chartData);
 
-  return (
-    <View style={styles.container}>
-      {title && <Text style={styles.title}>{title}</Text>}
-      <LineChart
-        data={chartData}
-        width={width - 48}
-        height={200}
-        chartConfig={chartConfig}
-        bezier
-        style={styles.chart}
-        withInnerLines={true}
-        withOuterLines={true}
-        withVerticalLabels={true}
-        withHorizontalLabels={true}
-        fromZero={false}
-        yAxisLabel="$"
-        yAxisSuffix="k"
-      />
-    </View>
-  );
+  try {
+    return (
+      <View style={styles.container}>
+        {title && <Text style={styles.title}>{title}</Text>}
+        <LineChart
+          data={chartData}
+          width={width - 48}
+          height={200}
+          chartConfig={chartConfig}
+          bezier
+          style={styles.chart}
+          withInnerLines={true}
+          withOuterLines={true}
+          withVerticalLabels={true}
+          withHorizontalLabels={true}
+          fromZero={false}
+          yAxisLabel="$"
+          yAxisSuffix="k"
+        />
+      </View>
+    );
+  } catch (error) {
+    console.log('❌ Chart rendering error:', error);
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={{ color: 'red', textAlign: 'center', marginTop: 20 }}>
+          Chart rendering error: {error.message}
+        </Text>
+      </View>
+    );
+  }
 }
 
 const styles = StyleSheet.create({

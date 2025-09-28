@@ -139,11 +139,9 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     });
 
     newSocket.on('flash_multiplier', (data: FlashMultiplier) => {
-      console.log('⚡ Flash multiplier received:', data);
       setFlashMultipliers(prev => {
         const updated = new Map(prev);
         updated.set(data.playerId, data);
-        console.log('⚡ Flash multipliers updated:', Array.from(updated.values()));
         return updated;
       });
 
@@ -152,7 +150,6 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         setFlashMultipliers(prev => {
           const updated = new Map(prev);
           updated.delete(data.playerId);
-          console.log('⚡ Flash multiplier expired:', data.playerId);
           return updated;
         });
       }, data.duration);
