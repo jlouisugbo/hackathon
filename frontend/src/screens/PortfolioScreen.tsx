@@ -35,7 +35,7 @@ import { Holding, Trade } from '../../../../shared/src/types';
 const { width } = Dimensions.get('window');
 
 export default function PortfolioScreen() {
-  const { portfolio, loading, error, refreshPortfolio } = usePortfolio();
+  const { portfolio, loading, error, refreshPortfolio, updatePortfolioValues } = usePortfolio();
   const { priceUpdates, isConnected, joinRoom } = useSocket();
   const { players } = useGame();
 
@@ -48,6 +48,14 @@ export default function PortfolioScreen() {
       joinRoom('user-1', 'DemoUser');
     }
   }, [isConnected]);
+
+  // Update portfolio values with current player prices when component mounts or players change
+  useEffect(() => {
+    if (portfolio && players.length > 0) {
+      console.log('🔄 Updating portfolio values with current player prices...');
+      updatePortfolioValues(players);
+    }
+  }, [portfolio, players, updatePortfolioValues]);
 
   const onRefresh = async () => {
     setRefreshing(true);

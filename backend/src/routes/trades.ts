@@ -83,17 +83,9 @@ router.post('/', async (req, res) => {
 
     const totalAmount = shares * currentPrice;
 
-    // Try to execute trade using database service first
+    // Use mock data for session persistence (no database)
     let tradeResult;
-    let portfolio = await databaseService.getPortfolioByUserId(userId);
-    
-    if (portfolio) {
-      // Execute with Supabase
-      tradeResult = await executeTradeWithDatabase(userId, playerId, playerName || player.name, type, shares, currentPrice, accountType, totalAmount);
-    } else {
-      // Fallback to mock data
-      tradeResult = executeTradeOrder(userId, playerId, shares, type, accountType);
-    }
+    tradeResult = executeTradeOrder(userId, playerId, shares, type, accountType);
 
     if (tradeResult.success) {
       // Apply market impact to player price if significant
@@ -470,6 +462,27 @@ router.post('/market', (req, res) => {
     // Reduce live trades remaining
     if (accountType === 'live') {
       portfolio.tradesRemaining = Math.max(0, portfolio.tradesRemaining - 1);
+    }
+
+    // Save portfolio to database
+    try {
+      const dbResult = await databaseService.updatePortfolio(userId, portfolio);
+      if (!dbResult) {
+        console.error('❌ Database update returned false');
+        return res.status(500).json({
+          success: false,
+          error: 'Database update failed',
+          message: 'Trade executed but failed to save to database'
+        });
+      }
+      console.log('✅ Portfolio saved to database successfully');
+    } catch (error) {
+      console.error('❌ Failed to save portfolio to database:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Database update failed',
+        message: 'Trade executed but failed to save to database'
+      });
     }
 
     // Add trade to history

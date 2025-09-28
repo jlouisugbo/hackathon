@@ -126,7 +126,7 @@ export default function MarketDashboard() {
     .slice(0, 3);
 
   const generatePortfolioHistory = () => {
-    const currentValue = portfolio?.totalValue || 10000;
+    const currentValue = portfolio?.totalValue || 1000; // Use current portfolio value or $1000 default
     const days = 7;
     const labels = [];
     const values = [];
@@ -136,9 +136,10 @@ export default function MarketDashboard() {
       date.setDate(date.getDate() - i);
       labels.push(i === 0 ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short' }));
 
-      const variance = (Math.random() - 0.5) * 0.1;
-      const dayValue = currentValue * (1 - (i * 0.02) + variance);
-      values.push(Math.round(dayValue / 1000));
+      // Generate more realistic variance based on current value
+      const variance = (Math.random() - 0.5) * 0.05; // Reduced variance for more stable chart
+      const dayValue = currentValue * (1 + variance);
+      values.push(Math.round(dayValue));
     }
 
     return { labels, values };

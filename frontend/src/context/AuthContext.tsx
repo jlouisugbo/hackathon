@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Demo login failed:', error);
       // Set fallback demo user
       const demoUser = {
-        id: 'd030067d-50aa-44c7-bc14-675af13fbb6a',
+        id: 'demo-user',
         email: 'demo@example.com',
         username: 'DemoUser',
         createdAt: new Date().toISOString()

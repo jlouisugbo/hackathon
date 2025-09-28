@@ -29,7 +29,7 @@ const app = (0, express_1.default)();
 const server = (0, http_1.createServer)(app);
 const io = new socket_io_1.Server(server, {
     cors: {
-        origin: process.env.CORS_ORIGIN || "http://localhost:19006",
+        origin: ["http://localhost:19006", "http://localhost:8081", "http://localhost:8082", "http://localhost:8083", "http://localhost:8084"],
         methods: ["GET", "POST", "PUT", "DELETE"],
         credentials: true
     }
@@ -38,7 +38,7 @@ exports.io = io;
 const PORT = parseInt(process.env.PORT || '3002', 10);
 // Middleware
 app.use((0, cors_1.default)({
-    origin: process.env.CORS_ORIGIN || "http://localhost:19006",
+    origin: ["http://localhost:19006", "http://localhost:8081", "http://localhost:8082", "http://localhost:8083", "http://localhost:8084"],
     credentials: true
 }));
 app.use(express_1.default.json());

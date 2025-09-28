@@ -80,10 +80,14 @@ export default function LiveTradingScreen() {
 
   const handleConfirmTrade = async (trade: TradeRequest) => {
     try {
+      console.log('🎯 Starting trade execution for:', trade);
       await executeTrade({ ...trade, accountType: 'live' });
+      console.log('🔄 Refreshing portfolio after trade...');
       await refreshPortfolio();
+      console.log('✅ Portfolio refreshed successfully');
       Alert.alert('Trade Executed!', `Successfully ${trade.type === 'buy' ? 'bought' : 'sold'} ${trade.shares} share(s)`);
     } catch (error) {
+      console.log('❌ Trade execution failed:', error);
       Alert.alert('Trade Failed', error instanceof Error ? error.message : 'Failed to execute trade');
     }
   };
@@ -157,8 +161,8 @@ export default function LiveTradingScreen() {
           <Text style={styles.flashTitle}>⚡ FLASH MULTIPLIERS ACTIVE</Text>
         </View>
 
-        {Array.from(flashMultipliers.values()).map((flash: FlashMultiplier) => (
-          <View key={flash.playerId} style={styles.flashItem}>
+        {Array.from(flashMultipliers.values()).map((flash: FlashMultiplier, index) => (
+          <View key={`${flash.playerId}-${index}`} style={styles.flashItem}>
             <View style={styles.flashContent}>
               <Text style={styles.flashPlayerName}>{flash.playerName}</Text>
               <Text style={styles.flashDescription}>{flash.eventDescription}</Text>

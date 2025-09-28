@@ -226,74 +226,22 @@ export function initializeMockData() {
     }
   });
 
-  // Create mock portfolios with realistic holdings
+  // Create clean portfolios with no random holdings
   portfolios = users.map(user => {
     const seasonHoldings = [];
     const liveHoldings = [];
 
-    // Generate 2-4 season holdings per user
-    const numSeasonHoldings = Math.floor(Math.random() * 3) + 2;
-    for (let i = 0; i < numSeasonHoldings; i++) {
-      const player = players[Math.floor(Math.random() * players.length)];
-      const shares = Math.floor(Math.random() * 20) + 5; // 5-25 shares
-      const averagePrice = player.currentPrice * (0.85 + Math.random() * 0.3); // ±15% from current
-      const totalValue = shares * player.currentPrice;
-      const unrealizedPL = totalValue - (shares * averagePrice);
-      const unrealizedPLPercent = (unrealizedPL / (shares * averagePrice)) * 100;
-
-      seasonHoldings.push({
-        playerId: player.id,
-        playerName: player.name,
-        shares,
-        averagePrice: Math.round(averagePrice * 100) / 100,
-        currentPrice: player.currentPrice,
-        totalValue: Math.round(totalValue * 100) / 100,
-        unrealizedPL: Math.round(unrealizedPL * 100) / 100,
-        unrealizedPLPercent: Math.round(unrealizedPLPercent * 100) / 100,
-        purchaseDate: Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000 // Last 30 days
-      });
-    }
-
-    // Generate 0-2 live holdings per user
-    const numLiveHoldings = Math.floor(Math.random() * 3);
-    for (let i = 0; i < numLiveHoldings; i++) {
-      const player = players[Math.floor(Math.random() * players.length)];
-      const shares = Math.floor(Math.random() * 10) + 2; // 2-12 shares
-      const averagePrice = player.currentPrice * (0.9 + Math.random() * 0.2); // ±10% from current
-      const totalValue = shares * player.currentPrice;
-      const unrealizedPL = totalValue - (shares * averagePrice);
-      const unrealizedPLPercent = (unrealizedPL / (shares * averagePrice)) * 100;
-
-      liveHoldings.push({
-        playerId: player.id,
-        playerName: player.name,
-        shares,
-        averagePrice: Math.round(averagePrice * 100) / 100,
-        currentPrice: player.currentPrice,
-        totalValue: Math.round(totalValue * 100) / 100,
-        unrealizedPL: Math.round(unrealizedPL * 100) / 100,
-        unrealizedPLPercent: Math.round(unrealizedPLPercent * 100) / 100,
-        purchaseDate: Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000 // Last 7 days
-      });
-    }
-
-    const seasonValue = seasonHoldings.reduce((sum, holding) => sum + holding.totalValue, 0);
-    const liveValue = liveHoldings.reduce((sum, holding) => sum + holding.totalValue, 0);
-    const totalValue = seasonValue + liveValue;
-    const seasonPL = seasonHoldings.reduce((sum, holding) => sum + holding.unrealizedPL, 0);
-    const livePL = liveHoldings.reduce((sum, holding) => sum + holding.unrealizedPL, 0);
-    const todaysPL = (Math.random() - 0.5) * 500; // ±$250 daily P&L
-
+    // Clean portfolio with just $1000 cash
     return {
       userId: user.id,
       seasonHoldings,
       liveHoldings,
-      totalValue: Math.round(totalValue * 100) / 100,
-      availableBalance: Math.round((10000 - seasonValue) * 100) / 100,
-      todaysPL: Math.round(todaysPL * 100) / 100,
-      seasonPL: Math.round(seasonPL * 100) / 100,
-      livePL: Math.round(livePL * 100) / 100,
-      tradesRemaining: Math.floor(Math.random() * 6), // 0-5 trades remaining
+      totalValue: 1000,
+      availableBalance: 1000,
+      todaysPL: 0,
+      seasonPL: 0,
+      livePL: 0,
+      tradesRemaining: 5,
       lastUpdated: Date.now()
     };
   });

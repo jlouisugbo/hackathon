@@ -73,17 +73,9 @@ router.post('/', async (req, res) => {
         // Calculate market impact before executing trade
         const marketImpact = marketImpact_1.MarketImpactCalculator.calculateTradeImpact(playerId, type, shares, currentPrice);
         const totalAmount = shares * currentPrice;
-        // Try to execute trade using database service first
+        // Use mock data for session persistence (no database)
         let tradeResult;
-        let portfolio = await databaseService_1.databaseService.getPortfolioByUserId(userId);
-        if (portfolio) {
-            // Execute with Supabase
-            tradeResult = await executeTradeWithDatabase(userId, playerId, playerName || player.name, type, shares, currentPrice, accountType, totalAmount);
-        }
-        else {
-            // Fallback to mock data
-            tradeResult = (0, mockData_1.executeTradeOrder)(userId, playerId, shares, type, accountType);
-        }
+        tradeResult = (0, mockData_1.executeTradeOrder)(userId, playerId, shares, type, accountType);
         if (tradeResult.success) {
             // Apply market impact to player price if significant
             if (marketImpact.broadcastRequired && Math.abs(marketImpact.priceImpact) > 0.01) {

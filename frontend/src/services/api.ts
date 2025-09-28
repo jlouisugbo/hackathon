@@ -34,7 +34,7 @@ class ApiService {
     const token = await AsyncStorage.getItem('auth_token');
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
-      'user-id': 'd030067d-50aa-44c7-bc14-675af13fbb6a', // Demo fallback
+      'user-id': 'demo-user', // Demo fallback
       ...options.headers,
     };
 

@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const authService_1 = require("../services/authService");
+const supabase_1 = require("../config/supabase");
 const router = (0, express_1.Router)();
 // Register endpoint
 router.post('/register', async (req, res) => {
@@ -49,41 +50,61 @@ router.post('/login', async (req, res) => {
 });
 // Get current user (if authenticated)
 router.get('/me', async (req, res) => {
-    try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({
-                success: false,
-                error: 'No token provided',
-                message: 'Authorization header required'
-            });
-        }
-        const token = authHeader.substring(7);
-        const decoded = authService_1.authService.verifyToken(token);
-        const user = await authService_1.authService.getUserById(decoded.id);
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                error: 'User not found',
-                message: 'User associated with token not found'
-            });
-        }
-        const response = {
-            success: true,
-            data: user,
-            message: 'User retrieved successfully'
-        };
-        res.status(200).json(response);
-    }
-    catch (error) {
-        console.error('Get user error:', error);
-        const response = {
+    const { data: { user } } = await supabase_1.supabase.auth.getUser();
+    if (!user) {
+        return res.status(404).json({
             success: false,
-            error: error.message || 'Authentication failed',
-            message: 'Invalid or expired token'
-        };
-        res.status(401).json(response);
+            error: 'User not found',
+            message: 'User associated with token not found'
+        });
     }
+    return res.status(200).json({
+        success: true,
+        user,
+        message: 'User retrieved successfully'
+    });
+    /*
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({
+          success: false,
+          error: 'No token provided',
+          message: 'Authorization header required'
+        });
+      }
+  
+      const token = authHeader.substring(7);
+      const decoded = authService.verifyToken(token);
+      const user = await authService.getUserById(decoded.id);
+      
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: 'User not found',
+          message: 'User associated with token not found'
+        });
+      }
+  
+      const response: ApiResponse = {
+        success: true,
+        data: user,
+        message: 'User retrieved successfully'
+      };
+      
+      res.status(200).json(response);
+    } catch (error: any) {
+      console.error('Get user error:', error);
+      
+      const response: ApiResponse = {
+        success: false,
+        error: error.message || 'Authentication failed',
+        message: 'Invalid or expired token'
+      };
+      
+      res.status(401).json(response);
+    }
+      */
 });
 // Quick login for demo (bypasses password)
 router.post('/demo-login', async (req, res) => {
