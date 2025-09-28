@@ -75,6 +75,8 @@ export default function LiveTradingScreen() {
   useEffect(() => {
     if (isConnected) {
       joinLiveTrading();
+      // Refresh portfolio when joining live trading to get updated trades
+      refreshPortfolio();
     }
   }, [isConnected]);
 
@@ -108,7 +110,7 @@ export default function LiveTradingScreen() {
       await executeTrade({ ...trade, accountType: 'live' });
       console.log('🔄 Refreshing portfolio after trade...');
       await refreshPortfolio();
-      console.log('✅ Portfolio refreshed successfully');
+      console.log('✅ Portfolio updated successfully');
       Alert.alert('Trade Executed!', `Successfully ${trade.type === 'buy' ? 'bought' : 'sold'} ${trade.shares} share(s)`);
     } catch (error) {
       console.log('❌ Trade execution failed:', error);

@@ -38,17 +38,29 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     fetchUserData();
-  }, []);
+  }, [user?.id]);
 
   const fetchUserData = async () => {
     try {
+      if (!user?.id) {
+        console.log('👤 User not loaded yet, skipping API calls');
+        setLoading(false);
+        return;
+      }
+
       // Fetch user rank and stats
       const [rankResponse, statsResponse] = await Promise.all([
-        apiService.getUserLeaderboardPosition(user?.id || ''),
-        apiService.getLeaderboardStats(),
+        apiService.getUserLeaderboardPosition(user.id).catch(err => {
+          console.log('📊 Error fetching user rank:', err);
+          return { success: false, error: err.message };
+        }),
+        apiService.getLeaderboardStats().catch(err => {
+          console.log('📊 Error fetching leaderboard stats:', err);
+          return { success: false, error: err.message };
+        }),
       ]);
 
-      if (rankResponse.success && rankResponse.data) {
+      if (rankResponse.success && 'data' in rankResponse && rankResponse.data) {
         setUserRank(rankResponse.data);
       } else {
         // User not in leaderboard yet - create default rank data

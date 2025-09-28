@@ -188,7 +188,7 @@ export function startGameSimulation(io: Server) {
   startPriceUpdates(io);
 
   // Start flash multiplier system
-  //startFlashMultiplierSystem(io);
+  startFlashMultiplierSystem(io);
 
   // Start game events
   startGameEvents(io);
@@ -258,7 +258,6 @@ function startPriceUpdates(io: Server) {
   }, PRICE_UPDATE_INTERVAL) as unknown as NodeJS.Timeout;
 }
 
-/*
 function startFlashMultiplierSystem(io: Server) {
   flashMultiplierInterval = setInterval(() => {
     const currentGame = getCurrentGame();
@@ -266,15 +265,33 @@ function startFlashMultiplierSystem(io: Server) {
 
     // Random chance for flash multiplier
     if (Math.random() < FLASH_MULTIPLIER_CHANCE) {
-      triggerFlashMultiplier(io);
+      const playersList = getPlayers();
+      const playingPlayers = playersList.filter(p => p.isPlaying);
+      
+      if (playingPlayers.length > 0) {
+        const randomPlayer = playingPlayers[Math.floor(Math.random() * playingPlayers.length)];
+        const multiplierValues = [2, 2.5, 3, 3.5, 4, 4.5, 5];
+        const multiplier = multiplierValues[Math.floor(Math.random() * multiplierValues.length)];
+        
+        const flashData: FlashMultiplier = {
+          playerId: randomPlayer.id,
+          playerName: randomPlayer.name,
+          multiplier,
+          duration: 30000, // 30 seconds
+          startTime: Date.now(),
+          eventDescription: generateFlashEvent(randomPlayer.name, multiplier),
+          isActive: true
+        };
+        
+        triggerFlashMultiplier(io, flashData);
+      }
     }
 
     // Clean up expired flash multipliers
     cleanupExpiredMultipliers(io);
 
-  }, PRICE_UPDATE_INTERVAL);
+  }, PRICE_UPDATE_INTERVAL) as unknown as NodeJS.Timeout;
 }
-*/
 
 function triggerFlashMultiplier(io: Server, flashData: FlashMultiplier) {
   const playersList = getPlayers();

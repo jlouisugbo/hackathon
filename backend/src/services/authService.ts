@@ -327,7 +327,7 @@ class AuthService {
             todays_pl: 0.00,
             season_pl: 0.00,
             live_pl: 0.00,
-            trades_remaining: 100,
+            trades_remaining: 5,
             created_at: new Date().toISOString(),
             last_updated: new Date().toISOString()
           });

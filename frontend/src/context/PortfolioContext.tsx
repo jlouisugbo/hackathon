@@ -66,7 +66,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
           todaysPL: 0,
           seasonPL: 0,
           livePL: 0,
-          tradesRemaining: 100,
+          tradesRemaining: 5,
           lastUpdated: Date.now()
         };
         

@@ -23,7 +23,7 @@ interface GameContextType {
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
-  const { addUserTrade, refreshPortfolio, updateCashBalance } = usePortfolio();
+  const { addUserTrade, updateCashBalance } = usePortfolio();
   const [currentGame, setCurrentGame] = useState<LiveGame | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
@@ -289,18 +289,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         console.log(`💰 ${tradeRequest.type.toUpperCase()} ${tradeRequest.shares} shares of ${response.data.playerName} for $${response.data.totalAmount.toFixed(2)}`);
         
         // The backend has already updated the portfolio in the database
-        // We just need to refresh the portfolio from the backend
         console.log('✅ Trade executed successfully by backend');
-        console.log('🔄 Refreshing portfolio from backend to get updated data...');
-        
-        // Refresh portfolio from backend to get the updated holdings
-        try {
-          await refreshPortfolio();
-          console.log('✅ Portfolio refreshed from backend');
-        } catch (refreshError) {
-          console.error('❌ Failed to refresh portfolio from backend:', refreshError);
-          // Don't fail the trade if portfolio refresh fails
-        }
         
         return response.data;
       } else {

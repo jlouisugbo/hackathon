@@ -61,11 +61,7 @@ export default function MarketDashboard() {
   }, [isConnected]);
 
   // Update portfolio when price updates are received
-  useEffect(() => {
-    if (isConnected && priceUpdates) {
-      refreshPortfolio();
-    }
-  }, [priceUpdates]);
+  // Portfolio updates automatically via WebSocket, no manual refresh needed
 
   // Handle flash multipliers
   useEffect(() => {
@@ -94,7 +90,7 @@ export default function MarketDashboard() {
     console.log('🔄 Using gentle refresh to preserve session data...');
     await clearAllData();
     
-    await refreshPortfolio();
+    // Portfolio updates automatically via WebSocket
     setRefreshing(false);
   };
 

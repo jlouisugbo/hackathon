@@ -165,7 +165,7 @@ export function initializeSocketHandlers(io: Server) {
     });
 
     // Handle live trading room
-    socket.on('join_live_trading', () => {
+    socket.on('join_live_trading', async () => {
       const user = connectedUsers.get(socket.id);
       if (!user) return;
 
@@ -175,6 +175,39 @@ export function initializeSocketHandlers(io: Server) {
         userRooms.set(user.userId, new Set());
       }
       userRooms.get(user.userId)!.add('live_trading');
+
+      // Reset trades for new live session
+      try {
+        const { databaseService } = await import('../services/databaseService');
+        let portfolio = await databaseService.getPortfolioByUserId(user.userId);
+        
+        if (!portfolio) {
+          // Create portfolio if it doesn't exist
+          console.log(`📊 Creating portfolio for ${user.username}`);
+          const defaultPortfolio = {
+            userId: user.userId,
+            seasonHoldings: [],
+            liveHoldings: [],
+            totalValue: 1000,
+            availableBalance: 1000,
+            todaysPL: 0,
+            seasonPL: 0,
+            livePL: 0,
+            tradesRemaining: 5,
+            lastUpdated: Date.now()
+          };
+          await databaseService.createPortfolio(user.userId, defaultPortfolio);
+          portfolio = await databaseService.getPortfolioByUserId(user.userId);
+        }
+        
+        if (portfolio) {
+          portfolio.tradesRemaining = 5; // Reset to 5 trades per live session
+          await databaseService.updatePortfolio(user.userId, portfolio);
+          console.log(`🔄 Reset trades for ${user.username} - 5 trades available`);
+        }
+      } catch (error) {
+        console.error('❌ Failed to reset trades for user:', error);
+      }
 
       console.log(`🔥 User ${user.username} joined live trading room`);
     });

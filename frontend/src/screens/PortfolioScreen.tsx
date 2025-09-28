@@ -59,10 +59,7 @@ export default function PortfolioScreen() {
   }, [portfolio, players, updatePortfolioValues]);
 
   // Force refresh when component mounts to ensure we have latest data
-  useEffect(() => {
-    console.log('🔄 PortfolioScreen mounted, refreshing portfolio...');
-    refreshPortfolio();
-  }, []);
+  // Portfolio loads automatically via PortfolioContext, no manual refresh needed
 
   const onRefresh = async () => {
     setRefreshing(true);
