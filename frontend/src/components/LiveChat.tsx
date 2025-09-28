@@ -126,7 +126,16 @@ export default function LiveChat({ visible, onClose }: LiveChatProps) {
         timestamp: event.timestamp,
         type: 'system'
       };
-      setMessages(prev => [...prev, gameMessage].slice(-50));
+      setMessages(prev => {
+        // Prevent duplicates: ignore if a message with same id already exists
+        if (prev.some(m => m.id === gameMessage.id)) return prev;
+        const next = [...prev, gameMessage].slice(-50);
+        // scroll to bottom shortly after adding
+        setTimeout(() => {
+          scrollViewRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+        return next;
+      });
     };
 
     socket.on('chat_message', handleChatMessage);
@@ -433,11 +442,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  tradeUsername: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.colors.onSurface,
   },
   tradeTypeChip: {
     height: 24,
