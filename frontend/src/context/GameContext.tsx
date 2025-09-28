@@ -63,19 +63,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       console.log('🔄 Fetching players from API...');
       console.log('🔄 Current timestamp:', Date.now());
       
-      // Check if we have cached players in session storage first
-      try {
-        const cachedPlayers = await AsyncStorage.getItem('cached_players');
-        if (cachedPlayers) {
-          const parsedPlayers = JSON.parse(cachedPlayers);
-          console.log('📦 Using cached players from session storage:', parsedPlayers.length, 'players');
-          console.log('📋 Cached player IDs:', parsedPlayers.map(p => p.id));
-          setPlayers(parsedPlayers);
-          return;
-        }
-      } catch (error) {
-        console.log('📦 No cached players found, fetching fresh data');
-      }
+      // ALWAYS fetch fresh data from backend - disable caching for now
+      console.log('🔄 Clearing cached players and fetching fresh data...');
+      await AsyncStorage.removeItem('cached_players');
       
       // Add cache-busting parameter to ensure fresh data
       const timestamp = Date.now();

@@ -12,18 +12,19 @@ let flashMultiplierInterval = null;
 let gameEventInterval = null;
 let priceUpdateInterval = null;
 let scoreUpdateInterval = null;
-// Configuration - Optimized for Railway memory limits
-const PRICE_UPDATE_INTERVAL = 10000; // 10 seconds (reduced frequency)
-const FLASH_MULTIPLIER_CHANCE = 0.15; // 15% chance per interval
-const GAME_EVENT_INTERVAL = 60000; // 60 seconds (reduced frequency)
-const MARKET_DATA_INTERVAL = 45000; // 45 seconds (reduced frequency)
-const SCORE_UPDATE_INTERVAL = 15000; // 15 seconds (reduced frequency)
+// Configuration - Enhanced for day trading simulation
+const PRICE_UPDATE_INTERVAL = 5000; // 5 seconds (faster for day trading)
+const FLASH_MULTIPLIER_CHANCE = 0.25; // 25% chance per interval (more frequent)
+const GAME_EVENT_INTERVAL = 30000; // 30 seconds (more frequent events)
+const MARKET_DATA_INTERVAL = 20000; // 20 seconds (faster market updates)
+const SCORE_UPDATE_INTERVAL = 10000; // 10 seconds (faster score updates)
 // Active flash multipliers
 const activeFlashMultipliers = new Map();
-// Pre-scripted game events for demo
+// Enhanced game events for realistic day trading scenarios
 const gameEvents = [
+    // High-impact plays that cause big price swings
     {
-        playerId: '', // Will be set dynamically
+        playerId: '',
         playerName: 'LeBron James',
         eventType: 'three_pointer',
         multiplier: 2.5,
@@ -81,6 +82,88 @@ const gameEvents = [
         priceImpact: 45.80,
         quarter: 4,
         gameTime: '0:02'
+    },
+    // Additional day trading scenarios
+    {
+        playerId: '',
+        playerName: 'Anthony Davis',
+        eventType: 'rebound',
+        multiplier: 1.3,
+        description: 'Anthony Davis grabs the rebound!',
+        priceImpact: 3.20,
+        quarter: 2,
+        gameTime: '8:15'
+    },
+    {
+        playerId: '',
+        playerName: 'Nikola Jokić',
+        eventType: 'assist',
+        multiplier: 1.4,
+        description: 'Jokić with a beautiful pass!',
+        priceImpact: 4.10,
+        quarter: 2,
+        gameTime: '5:30'
+    },
+    {
+        playerId: '',
+        playerName: 'Kevin Durant',
+        eventType: 'three_pointer',
+        multiplier: 2.2,
+        description: 'Durant hits a step-back three!',
+        priceImpact: 12.80,
+        quarter: 3,
+        gameTime: '6:45'
+    },
+    {
+        playerId: '',
+        playerName: 'Damian Lillard',
+        eventType: 'three_pointer',
+        multiplier: 2.8,
+        description: 'Dame Time! Lillard from deep!',
+        priceImpact: 18.60,
+        quarter: 4,
+        gameTime: '2:30'
+    },
+    {
+        playerId: '',
+        playerName: 'Jayson Tatum',
+        eventType: 'dunk',
+        multiplier: 1.6,
+        description: 'Tatum with a powerful slam!',
+        priceImpact: 7.40,
+        quarter: 1,
+        gameTime: '9:20'
+    },
+    // Negative events that cause price drops
+    {
+        playerId: '',
+        playerName: 'LeBron James',
+        eventType: 'turnover',
+        multiplier: 0.8,
+        description: 'LeBron James commits a turnover',
+        priceImpact: -8.20,
+        quarter: 3,
+        gameTime: '4:50'
+    },
+    {
+        playerId: '',
+        playerName: 'Stephen Curry',
+        eventType: 'miss',
+        multiplier: 0.9,
+        description: 'Curry misses a wide-open three',
+        priceImpact: -5.10,
+        quarter: 2,
+        gameTime: '7:15'
+    },
+    {
+        playerId: '',
+        playerName: 'Giannis Antetokounmpo',
+        eventType: 'foul',
+        multiplier: 0.7,
+        description: 'Giannis picks up his 4th foul',
+        priceImpact: -6.80,
+        quarter: 3,
+        gameTime: '5:25'
     }
 ];
 let eventIndex = 0;
@@ -96,6 +179,8 @@ function startGameSimulation(io) {
     startMarketDataBroadcast(io);
     // Start live score updates
     startScoreUpdates(io);
+    // Start market sentiment updates for day trading
+    startMarketSentimentUpdates(io);
     console.log('✅ Game simulation started');
 }
 function startPriceUpdates(io) {
@@ -107,13 +192,16 @@ function startPriceUpdates(io) {
         // Update prices for playing players more frequently
         const playingPlayers = playersList.filter(p => p.isPlaying);
         playingPlayers.forEach(player => {
-            // Base volatility influenced by game state
-            let volatility = player.volatility;
+            // Enhanced volatility for day trading
+            let volatility = player.volatility * 1.5; // 50% more volatile during live games
             // Increase volatility if player has active flash multiplier
             if (activeFlashMultipliers.has(player.id)) {
-                volatility *= 2.5;
+                volatility *= 3.0; // Even more volatile during flash multipliers
             }
-            // Random price change
+            // Add momentum-based price changes (trending up/down)
+            const momentum = Math.random() > 0.7 ? (Math.random() > 0.5 ? 1.2 : 0.8) : 1.0;
+            volatility *= momentum;
+            // Random price change with higher frequency
             const changePercent = (Math.random() - 0.5) * 2 * volatility * 100;
             const priceChange = (player.currentPrice * changePercent) / 100;
             const newPrice = Math.max(10, player.currentPrice + priceChange);
@@ -438,6 +526,29 @@ function stopGameSimulation() {
     // Clear active flash multipliers
     activeFlashMultipliers.clear();
     console.log('✅ Game simulation stopped');
+}
+function startMarketSentimentUpdates(io) {
+    setInterval(() => {
+        const currentGame = (0, mockData_1.getCurrentGame)();
+        if (!currentGame || !currentGame.isActive)
+            return;
+        // Randomly change market sentiment for day trading
+        const sentiments = ['bullish', 'bearish', 'neutral'];
+        const randomSentiment = sentiments[Math.floor(Math.random() * sentiments.length)];
+        // Update game with new sentiment
+        currentGame.marketSentiment = randomSentiment;
+        currentGame.tradingVolume = Math.floor(Math.random() * 2000000) + 500000; // 500k-2.5M volume
+        currentGame.volatilityIndex = Math.random() * 1.0; // 0-1 volatility index
+        currentGame.lastPriceUpdate = Date.now();
+        // Broadcast market data update
+        (0, socketHandler_1.broadcastMarketData)(io, {
+            sentiment: randomSentiment,
+            volume: currentGame.tradingVolume,
+            volatility: currentGame.volatilityIndex,
+            timestamp: Date.now()
+        });
+        console.log(`📊 Market sentiment: ${randomSentiment}, Volume: ${currentGame.tradingVolume.toLocaleString()}`);
+    }, 45000); // Update every 45 seconds
 }
 function getActiveFlashMultipliers() {
     return Array.from(activeFlashMultipliers.values());

@@ -299,7 +299,7 @@ export default function PortfolioScreen() {
                 const isPositive = holding.unrealizedPL >= 0;
 
                 return (
-                  <Surface key={`${selectedTab}-${holding.playerId}-${index}`} style={styles.holdingCard}>
+                  <Surface key={`${selectedTab}-${holding.playerId}-${holding.shares}-${holding.purchaseDate}-${index}`} style={styles.holdingCard}>
                     <View style={styles.holdingContent}>
                       <View style={styles.holdingHeader}>
                         <View style={styles.holdingLeft}>

@@ -27,7 +27,7 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:19006", "http://localhost:8081", "http://localhost:8082", "http://localhost:8083", "http://localhost:8084"],
+    origin: ["http://localhost:19006", "http://localhost:8081", "http://localhost:8082", "http://localhost:8083", "http://localhost:8084", "http://localhost:3000", "http://localhost:3001", "http://localhost:19000", "http://localhost:19001", "http://localhost:19002", "http://143.215.100.53:19006", "http://143.215.100.53:8081", "http://143.215.100.53:8082"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   }
@@ -37,7 +37,7 @@ const PORT = parseInt(process.env.PORT || '3002', 10);
 
 // Middleware
 app.use(cors({
-  origin: ["http://localhost:19006", "http://localhost:8081", "http://localhost:8082", "http://localhost:8083", "http://localhost:8084"],
+  origin: ["http://localhost:19006", "http://localhost:8081", "http://localhost:8082", "http://localhost:8083", "http://localhost:8084", "http://localhost:3000", "http://localhost:3001", "http://localhost:19000", "http://localhost:19001", "http://localhost:19002", "http://143.215.100.53:19006", "http://143.215.100.53:8081", "http://143.215.100.53:8082"],
   credentials: true
 }));
 app.use(express.json());

@@ -274,7 +274,7 @@ export function initializeMockData() {
     });
   }
 
-  // Create mock live game
+  // Create enhanced live game for day trading
   currentGame = {
     id: uuidv4(),
     homeTeam: 'LAL',
@@ -285,7 +285,14 @@ export function initializeMockData() {
     timeRemaining: '7:32',
     isActive: true,
     startTime: Date.now() - (2.5 * 60 * 60 * 1000), // Started 2.5 hours ago
-    activePlayers: players.filter(p => p.isPlaying).map(p => p.id)
+    activePlayers: players.filter(p => p.isPlaying).map(p => p.id),
+    // Enhanced day trading data
+    marketSentiment: 'bullish', // bullish, bearish, neutral
+    tradingVolume: 1250000, // High volume for day trading
+    volatilityIndex: 0.85, // High volatility for day trading
+    hotPlayers: ['Stephen Curry', 'LeBron James', 'Giannis Antetokounmpo'], // Trending players
+    marketOpen: true,
+    lastPriceUpdate: Date.now()
   };
 
   console.log(`✅ Initialized ${players.length} players`);

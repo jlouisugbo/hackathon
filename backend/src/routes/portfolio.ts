@@ -10,10 +10,15 @@ router.get('/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     
-    // Use mock data for session persistence (no database)
-    let portfolio;
-    const portfolioList = getPortfolios();
-    portfolio = portfolioList.find(p => p.userId === userId);
+    // Try to get portfolio from database first
+    let portfolio = await databaseService.getPortfolioByUserId(userId);
+    
+    // If not found in database, try mock data as fallback
+    if (!portfolio) {
+      console.log(`📊 Portfolio not found in database for user: ${userId}, trying mock data`);
+      const portfolioList = getPortfolios();
+      portfolio = portfolioList.find(p => p.userId === userId);
+    }
 
     // If still not found, generate a dummy portfolio for any user ID
     if (!portfolio) {

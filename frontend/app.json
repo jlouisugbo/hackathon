@@ -20,8 +20,8 @@
       "bundler": "metro"
     },
     "extra": {
-      "apiUrl": "https://player-stock-market-backend.onrender.com",
-      "socketUrl": "https://player-stock-market-backend.onrender.com"
+      "apiUrl": "http://143.215.100.53:3001",
+      "socketUrl": "http://143.215.100.53:3001"
     },
     "scheme": "player-stock-market",
     "platforms": ["ios", "android", "web"]

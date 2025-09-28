@@ -81,7 +81,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const response = await apiService.login(email, password);
+      // Use demo login instead of regular login
+      const response = await apiService.demoLogin(email, 'DemoUser');
 
       if (response.success && response.data) {
         const { user: userData, token: authToken } = response.data;

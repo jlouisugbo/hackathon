@@ -85,7 +85,7 @@ export interface GameEvent {
   timestamp: number;
   playerId: string;
   playerName: string;
-  eventType: 'basket' | 'three_pointer' | 'assist' | 'rebound' | 'steal' | 'block' | 'dunk';
+  eventType: 'basket' | 'three_pointer' | 'assist' | 'rebound' | 'steal' | 'block' | 'dunk' | 'turnover' | 'miss' | 'foul';
   multiplier?: number;
   description: string;
   priceImpact: number;
@@ -104,6 +104,13 @@ export interface LiveGame {
   isActive: boolean;
   startTime: number;
   activePlayers: string[];
+  // Enhanced day trading properties
+  marketSentiment?: 'bullish' | 'bearish' | 'neutral';
+  tradingVolume?: number;
+  volatilityIndex?: number;
+  hotPlayers?: string[];
+  marketOpen?: boolean;
+  lastPriceUpdate?: number;
 }
 
 export interface User {

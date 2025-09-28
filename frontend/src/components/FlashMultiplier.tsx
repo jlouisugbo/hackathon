@@ -127,7 +127,7 @@ export default function FlashMultiplier({
           <View style={styles.sparkleContainer}>
             {[...Array(8)].map((_, index) => (
               <View
-                key={index}
+                key={`sparkle-${index}`}
                 style={[
                   styles.sparkle,
                   {

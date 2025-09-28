@@ -41,13 +41,12 @@ export default function LiveTradingScreen() {
   // Notification badge state for chat
   const [unreadMessages, setUnreadMessages] = useState(0);
   const chatRef = useRef<any>(null);
-  const { players, loading, executeTrade } = useGame();
+  const { players, loading, executeTrade, currentGame } = useGame();
   const {
     flashMultipliers,
     gameEvents,
     isConnected,
-    joinLiveTrading,
-    liveGame
+    joinLiveTrading
   } = useSocket();
   const { portfolio, refreshPortfolio } = usePortfolio();
 
@@ -97,6 +96,12 @@ export default function LiveTradingScreen() {
     setTradeModalVisible(true);
   };
 
+  const handleQuickSell = (player: Player) => {
+    setSelectedPlayer(player);
+    setTradeType('sell');
+    setTradeModalVisible(true);
+  };
+
   const handleConfirmTrade = async (trade: TradeRequest) => {
     try {
       console.log('🎯 Starting trade execution for:', trade);
@@ -112,7 +117,7 @@ export default function LiveTradingScreen() {
   };
 
   const renderGameHeader = () => {
-    if (!liveGame) {
+    if (!currentGame) {
       return (
         <View style={styles.noGameContainer}>
           <Ionicons name="basketball-outline" size={64} color={theme.colors.neutral} />
@@ -133,15 +138,15 @@ export default function LiveTradingScreen() {
             <Text style={styles.liveText}>LIVE</Text>
           </View>
           <Text style={styles.gameTime}>
-            Q{liveGame.quarter} • {liveGame.timeRemaining}
+            Q{currentGame.quarter} • {currentGame.timeRemaining}
           </Text>
         </View>
 
         {/* Score */}
         <View style={styles.scoreContainer}>
           <View style={styles.teamContainer}>
-            <Text style={styles.teamName}>{liveGame.awayTeam}</Text>
-            <Text style={styles.teamScore}>{liveGame.awayScore}</Text>
+            <Text style={styles.teamName}>{currentGame.awayTeam}</Text>
+            <Text style={styles.teamScore}>{currentGame.awayScore}</Text>
           </View>
 
           <View style={styles.scoreDivider}>
@@ -149,8 +154,8 @@ export default function LiveTradingScreen() {
           </View>
 
           <View style={styles.teamContainer}>
-            <Text style={styles.teamName}>{liveGame.homeTeam}</Text>
-            <Text style={styles.teamScore}>{liveGame.homeScore}</Text>
+            <Text style={styles.teamName}>{currentGame.homeTeam}</Text>
+            <Text style={styles.teamScore}>{currentGame.homeScore}</Text>
           </View>
         </View>
 
@@ -207,6 +212,85 @@ export default function LiveTradingScreen() {
     );
   };
 
+  const renderLivePortfolio = () => {
+    if (!portfolio || !portfolio.liveHoldings || portfolio.liveHoldings.length === 0) {
+      return null;
+    }
+
+    return (
+      <View style={styles.livePortfolioSection}>
+        <View style={styles.liveSectionHeader}>
+          <Text style={styles.liveSectionTitle}>⚡ Live Holdings</Text>
+          <Text style={styles.holdingsCount}>
+            {portfolio.liveHoldings.length} position{portfolio.liveHoldings.length !== 1 ? 's' : ''}
+          </Text>
+        </View>
+
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          style={styles.holdingsScroll}
+        >
+          {portfolio.liveHoldings.map((holding, index) => {
+            const player = players.find(p => p.id === holding.playerId);
+            const isPositive = holding.unrealizedPL >= 0;
+            const hasFlashMultiplier = flashMultipliers.has(holding.playerId);
+
+            return (
+              <View key={`live-${holding.playerId}-${holding.shares}-${holding.purchaseDate}-${index}`} style={styles.holdingCard}>
+                <View style={styles.holdingHeader}>
+                  <View style={styles.holdingLeft}>
+                    <Text style={styles.holdingPlayerName}>{holding.playerName}</Text>
+                    <Text style={styles.holdingTeam}>{player?.team || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.holdingRight}>
+                    <Text style={styles.holdingCurrentPrice}>
+                      {formatCurrency(holding.currentPrice)}
+                    </Text>
+                    {hasFlashMultiplier && (
+                      <View style={styles.flashIndicator}>
+                        <Text style={styles.flashText}>⚡</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+
+                <View style={styles.holdingDetails}>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Shares:</Text>
+                    <Text style={styles.detailValue}>{holding.shares}</Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>P&L:</Text>
+                    <Text style={[
+                      styles.detailValue,
+                      { color: isPositive ? theme.colors.bullish : theme.colors.bearish }
+                    ]}>
+                      {isPositive ? '+' : ''}{formatCurrency(holding.unrealizedPL)}
+                    </Text>
+                  </View>
+                </View>
+
+                <Button
+                  mode="outlined"
+                  onPress={() => handleQuickSell(player!)}
+                  style={[
+                    styles.quickSellButton,
+                    { borderColor: theme.colors.bearish }
+                  ]}
+                  labelStyle={{ color: theme.colors.bearish, fontSize: 12 }}
+                  compact
+                >
+                  Quick Sell
+                </Button>
+              </View>
+            );
+          })}
+        </ScrollView>
+      </View>
+    );
+  };
+
   const renderPlayers = () => {
     if (loading) {
       return (
@@ -218,8 +302,8 @@ export default function LiveTradingScreen() {
     }
 
     // Filter for active players if game is live, otherwise show all
-    let displayPlayers = liveGame
-      ? players.filter(p => liveGame.activePlayers.includes(p.id))
+    let displayPlayers = currentGame
+      ? players.filter(p => currentGame.activePlayers.includes(p.id))
       : players;
 
     // Filter by search query
@@ -247,7 +331,7 @@ export default function LiveTradingScreen() {
       <View style={styles.playersSection}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>
-            {liveGame ? 'Live Players' : 'All Players'}
+            {currentGame ? 'Live Players' : 'All Players'}
           </Text>
           <Text style={styles.sectionSubtitle}>
             {displayPlayers.length} players available
@@ -281,14 +365,14 @@ export default function LiveTradingScreen() {
 
             return (
               <View
-                key={`player-${player.id}-${index}`}
+                key={`player-${player.id}-${player.name}-${index}`}
                 style={styles.playerCardWrapper}
               >
                 <PlayerCard
                   player={player}
                   onBuy={() => handleQuickBuy(player)}
                   flashMultiplier={multiplier}
-                  isLive={liveGame?.activePlayers.includes(player.id)}
+                  isLive={currentGame?.activePlayers.includes(player.id)}
                   compact={false}
                 />
               </View>
@@ -300,7 +384,7 @@ export default function LiveTradingScreen() {
   };
 
   const renderRecentEvents = () => {
-    if (gameEvents.length === 0 || !liveGame) return null;
+    if (gameEvents.length === 0 || !currentGame) return null;
 
     return (
       <View style={styles.eventsSection}>
@@ -345,6 +429,7 @@ export default function LiveTradingScreen() {
       >
         {renderGameHeader()}
         {renderFlashMultipliers()}
+        {renderLivePortfolio()}
         {renderPlayers()}
         {renderRecentEvents()}
       </ScrollView>
@@ -670,5 +755,101 @@ const styles = StyleSheet.create({
     right: 16,
     bottom: 20,
     backgroundColor: theme.colors.primary,
+  },
+
+  // Live Portfolio Styles
+  livePortfolioSection: {
+    margin: 16,
+    marginBottom: 8,
+  },
+  liveSectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  liveSectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: theme.colors.onSurface,
+  },
+  holdingsCount: {
+    fontSize: 14,
+    color: theme.colors.neutral,
+    fontWeight: '600',
+  },
+  holdingsScroll: {
+    marginHorizontal: -16,
+  },
+  holdingCard: {
+    backgroundColor: theme.colors.cardBg,
+    borderRadius: 12,
+    padding: 12,
+    marginRight: 12,
+    marginLeft: 16,
+    width: 160,
+    borderWidth: 1,
+    borderColor: theme.colors.cardBorder,
+  },
+  holdingHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  holdingLeft: {
+    flex: 1,
+  },
+  holdingPlayerName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: theme.colors.onSurface,
+    marginBottom: 2,
+  },
+  holdingTeam: {
+    fontSize: 12,
+    color: theme.colors.neutral,
+  },
+  holdingRight: {
+    alignItems: 'flex-end',
+  },
+  holdingCurrentPrice: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.onSurface,
+    marginBottom: 4,
+  },
+  flashIndicator: {
+    backgroundColor: theme.colors.primary + '20',
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  flashText: {
+    fontSize: 12,
+    color: theme.colors.primary,
+    fontWeight: '700',
+  },
+  holdingDetails: {
+    marginBottom: 8,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 2,
+  },
+  detailLabel: {
+    fontSize: 12,
+    color: theme.colors.neutral,
+    fontWeight: '500',
+  },
+  detailValue: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: theme.colors.onSurface,
+  },
+  quickSellButton: {
+    borderRadius: 6,
+    borderWidth: 1,
   },
 });

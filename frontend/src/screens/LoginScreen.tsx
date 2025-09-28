@@ -58,23 +58,6 @@ export default function LoginScreen({ onNavigateToRegister, onLoginSuccess }: Lo
     }
   };
 
-  const handleDemoLogin = async () => {
-    try {
-      setLoading(true);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      
-      await login('demo@example.com', 'demo123');
-      onLoginSuccess();
-      
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch (error) {
-      console.error('Demo login error:', error);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert('Demo Login Failed', 'Unable to login with demo account');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <KeyboardAvoidingView 
@@ -146,23 +129,6 @@ export default function LoginScreen({ onNavigateToRegister, onLoginSuccess }: Lo
                 {loading ? 'Signing In...' : 'Sign In'}
               </Button>
 
-              <View style={styles.divider}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>OR</Text>
-                <View style={styles.dividerLine} />
-              </View>
-
-              <Button
-                mode="outlined"
-                onPress={handleDemoLogin}
-                loading={loading}
-                disabled={loading}
-                style={styles.demoButton}
-                labelStyle={styles.demoButtonText}
-                contentStyle={styles.demoButtonContent}
-              >
-                Try Demo Account
-              </Button>
             </Card.Content>
           </Card>
 
@@ -264,33 +230,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   loginButtonContent: {
-    paddingVertical: 8,
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 16,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: theme.colors.outline,
-  },
-  dividerText: {
-    marginHorizontal: 16,
-    color: theme.colors.neutral,
-    fontSize: 14,
-  },
-  demoButton: {
-    borderRadius: 12,
-    borderColor: theme.colors.primary,
-  },
-  demoButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.primary,
-  },
-  demoButtonContent: {
     paddingVertical: 8,
   },
   registerContainer: {
