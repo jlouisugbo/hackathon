@@ -19,7 +19,6 @@ import { formatCurrency, formatPercent } from '../utils/formatters';
 interface PlayerCardProps {
   player: Player;
   onBuy?: () => void;
-  onSell?: () => void;
   onPress?: () => void;
   flashMultiplier?: number;
   isLive?: boolean;
@@ -32,7 +31,6 @@ const cardWidth = (width - 64) / 2; // Account for FlatList padding and spacing
 export default function PlayerCard({
   player,
   onBuy,
-  onSell,
   onPress,
   flashMultiplier,
   isLive = false,
@@ -51,12 +49,6 @@ export default function PlayerCard({
     e.stopPropagation();
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onBuy?.();
-  };
-
-  const handleSell = (e: any) => {
-    e.stopPropagation();
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    onSell?.();
   };
 
   const getMultiplierColor = (multiplier: number) => {
@@ -134,13 +126,6 @@ export default function PlayerCard({
             onPress={handleBuy}
           >
             <Text style={styles.buyButtonText}>BUY</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.actionButton, styles.sellButton]}
-            onPress={handleSell}
-          >
-            <Text style={styles.sellButtonText}>SELL</Text>
           </TouchableOpacity>
         </View>
 
@@ -302,18 +287,8 @@ const styles = StyleSheet.create({
   buyButton: {
     backgroundColor: theme.colors.buyButton,
   },
-  sellButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: theme.colors.sellButton,
-  },
   buyButtonText: {
     color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  sellButtonText: {
-    color: theme.colors.sellButton,
     fontSize: 12,
     fontWeight: '700',
   },

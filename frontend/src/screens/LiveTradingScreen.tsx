@@ -97,12 +97,6 @@ export default function LiveTradingScreen() {
     setTradeModalVisible(true);
   };
 
-  const handleQuickSell = (player: Player) => {
-    setSelectedPlayer(player);
-    setTradeType('sell');
-    setTradeModalVisible(true);
-  };
-
   const handleConfirmTrade = async (trade: TradeRequest) => {
     try {
       console.log('🎯 Starting trade execution for:', trade);
@@ -293,7 +287,6 @@ export default function LiveTradingScreen() {
                 <PlayerCard
                   player={player}
                   onBuy={() => handleQuickBuy(player)}
-                  onSell={() => handleQuickSell(player)}
                   flashMultiplier={multiplier}
                   isLive={liveGame?.activePlayers.includes(player.id)}
                   compact={false}

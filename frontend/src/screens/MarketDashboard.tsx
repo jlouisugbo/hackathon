@@ -102,12 +102,6 @@ export default function MarketDashboard() {
     setTradeModalVisible(true);
   };
 
-  const handleSellPress = (player: Player) => {
-    setSelectedPlayer(player);
-    setTradeType('sell');
-    setTradeModalVisible(true);
-  };
-
   const handleConfirmTrade = async (trade: TradeRequest) => {
     try {
       await executeTrade(trade);
@@ -310,7 +304,6 @@ export default function MarketDashboard() {
                   player={player}
                   onPress={() => handlePlayerPress(player)}
                   onBuy={() => handleBuyPress(player)}
-                  onSell={() => handleSellPress(player)}
                   flashMultiplier={flashMultipliers.get(player.id)?.multiplier}
                   isLive={player.isPlaying}
                 />
