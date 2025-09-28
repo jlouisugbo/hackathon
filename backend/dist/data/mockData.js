@@ -335,6 +335,7 @@ exports.updateGameScore = updateGameScore;
 const executeTradeOrder = (userId, playerId, shares, type, accountType) => {
     const portfolio = exports.portfolios.find(p => p.userId === userId);
     const player = exports.players.find(p => p.id === playerId);
+    
     if (!portfolio || !player) {
         return { success: false, error: 'Portfolio or player not found' };
     }

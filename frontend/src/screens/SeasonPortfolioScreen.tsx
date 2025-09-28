@@ -17,6 +17,10 @@ import {
   Chip,
   Surface,
   ActivityIndicator,
+  Modal,
+  Portal,
+  TextInput,
+  Divider,
 } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { usePortfolio } from '../context/PortfolioContext';
@@ -32,6 +36,9 @@ export default function SeasonPortfolioScreen() {
   const { priceUpdates, isConnected, joinRoom } = useSocket();
   const { players, executeTrade } = useGame();
   const [refreshing, setRefreshing] = useState(false);
+  const [sellModalVisible, setSellModalVisible] = useState(false);
+  const [selectedHolding, setSelectedHolding] = useState<Holding | null>(null);
+  const [sellQuantity, setSellQuantity] = useState('');
 
   useEffect(() => {
     // Auto-join socket room with demo user
@@ -55,14 +62,39 @@ export default function SeasonPortfolioScreen() {
     setRefreshing(false);
   };
 
-  const handleSell = async (holding: Holding) => {
+  const openSellModal = (holding: Holding) => {
+    setSelectedHolding(holding);
+    setSellQuantity(holding.shares.toString());
+    setSellModalVisible(true);
+  };
+
+  const closeSellModal = () => {
+    setSellModalVisible(false);
+    setSelectedHolding(null);
+    setSellQuantity('');
+  };
+
+  const handleSell = async () => {
+    if (!selectedHolding) return;
+
+    const quantity = parseInt(sellQuantity);
+    if (isNaN(quantity) || quantity <= 0) {
+      Alert.alert('Invalid Quantity', 'Please enter a valid number of shares to sell.');
+      return;
+    }
+
+    if (quantity > selectedHolding.shares) {
+      Alert.alert('Invalid Quantity', `You can only sell up to ${selectedHolding.shares} shares.`);
+      return;
+    }
+
     try {
-      console.log('📉 Selling holding:', holding);
+      console.log('📉 Selling holding:', selectedHolding, 'Quantity:', quantity);
       
       const tradeRequest = {
-        playerId: holding.playerId,
+        playerId: selectedHolding.playerId,
         type: 'sell' as const,
-        shares: holding.shares,
+        shares: quantity,
         orderType: 'market' as const,
         accountType: 'season' as const
       };
@@ -71,6 +103,9 @@ export default function SeasonPortfolioScreen() {
       const trade = await executeTrade(tradeRequest);
       
       console.log('✅ Sell trade executed successfully:', trade);
+      
+      // Close modal and refresh
+      closeSellModal();
       
       // The portfolio will be automatically refreshed by the executeTrade function
       // which calls refreshPortfolio() after the trade
@@ -138,7 +173,7 @@ export default function SeasonPortfolioScreen() {
           <View style={styles.sellButtonContainer}>
             <Button
               mode="outlined"
-              onPress={() => handleSell(item)}
+              onPress={() => openSellModal(item)}
               style={[
                 styles.sellButton,
                 { borderColor: theme.colors.bearish }
@@ -146,7 +181,7 @@ export default function SeasonPortfolioScreen() {
               labelStyle={{ color: theme.colors.bearish }}
               icon="trending-down"
             >
-              Sell All ({item.shares} shares)
+              Sell Shares
             </Button>
           </View>
         </Card.Content>
@@ -294,6 +329,63 @@ export default function SeasonPortfolioScreen() {
         onPress={() => navigation.navigate('Market' as never)}
         label="Invest"
       />
+
+      {/* Sell Modal */}
+      <Portal>
+        <Modal
+          visible={sellModalVisible}
+          onDismiss={closeSellModal}
+          contentContainerStyle={styles.modalContainer}
+        >
+          <Card style={styles.modalCard}>
+            <Card.Content>
+              <Title style={styles.modalTitle}>Sell Shares</Title>
+              {selectedHolding && (
+                <>
+                  <Text style={styles.modalSubtitle}>
+                    {selectedHolding.playerName}
+                  </Text>
+                  <Text style={styles.modalInfo}>
+                    Current Price: {formatCurrency(selectedHolding.currentPrice)}
+                  </Text>
+                  <Text style={styles.modalInfo}>
+                    Available Shares: {selectedHolding.shares}
+                  </Text>
+                  
+                  <Divider style={styles.modalDivider} />
+                  
+                  <TextInput
+                    label="Number of shares to sell"
+                    value={sellQuantity}
+                    onChangeText={setSellQuantity}
+                    keyboardType="numeric"
+                    style={styles.quantityInput}
+                    mode="outlined"
+                  />
+                  
+                  <View style={styles.modalButtons}>
+                    <Button
+                      mode="outlined"
+                      onPress={closeSellModal}
+                      style={styles.modalButton}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      mode="contained"
+                      onPress={handleSell}
+                      style={[styles.modalButton, { backgroundColor: theme.colors.bearish }]}
+                      labelStyle={{ color: 'white' }}
+                    >
+                      Sell
+                    </Button>
+                  </View>
+                </>
+              )}
+            </Card.Content>
+          </Card>
+        </Modal>
+      </Portal>
     </View>
   );
 }
@@ -485,5 +577,42 @@ const styles = StyleSheet.create({
   sellButton: {
     borderRadius: 8,
     borderWidth: 1.5,
+  },
+  modalContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  modalInfo: {
+    textAlign: 'center',
+    color: theme.colors.onSurface + '80',
+    marginBottom: 4,
+  },
+  modalDivider: {
+    marginVertical: 16,
+  },
+  quantityInput: {
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
   },
 });

@@ -291,6 +291,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         // The backend has already updated the portfolio in the database
         console.log('✅ Trade executed successfully by backend');
         
+        // Update portfolio with the trade result
+        console.log('🔄 Updating portfolio after trade...');
+        await addUserTrade(response.data);
+        
         return response.data;
       } else {
         console.log('❌ Trade failed:', response.error);

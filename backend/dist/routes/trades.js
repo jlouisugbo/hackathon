@@ -76,8 +76,8 @@ router.post('/', async (req, res) => {
         // Use mock data for session persistence (no database)
         let tradeResult;
         tradeResult = (0, mockData_1.executeTradeOrder)(userId, playerId, shares, type, accountType);
-        if (tradeResult.success) {
-            // Apply market impact to player price if significant
+    if (tradeResult.success) {
+        // Apply market impact to player price if significant
             if (marketImpact.broadcastRequired && Math.abs(marketImpact.priceImpact) > 0.01) {
                 (0, mockData_1.updatePlayerPrice)(playerId, marketImpact.newPrice);
                 // Broadcast price update to all connected users
