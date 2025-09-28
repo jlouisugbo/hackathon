@@ -13,7 +13,7 @@ import {
   Trade,
   Portfolio,
   LiveGame
-} from '../../../shared/src/types';
+} from '@player-stock-market/shared';
 
 interface SocketContextType {
   socket: Socket | null;
@@ -67,7 +67,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [volumeAlerts, setVolumeAlerts] = useState<any[]>([]);
   const [marketSentiment, setMarketSentiment] = useState<any | null>(null);
 
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 5;
   const isConnectingRef = useRef(false);

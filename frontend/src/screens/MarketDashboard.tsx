@@ -134,47 +134,19 @@ export default function MarketDashboard() {
     .sort((a, b) => a.priceChangePercent24h - b.priceChangePercent24h)
     .slice(0, 3);
 
-<<<<<<< HEAD
-  const generatePortfolioHistory = () => {
-    const currentValue = portfolio?.totalValue || 1000; // Use current portfolio value or $1000 default
-    const days = 7;
-    const labels = [];
-    const values = [];
-
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      labels.push(i === 0 ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short' }));
-
-      // Generate more realistic variance based on current value
-      const variance = (Math.random() - 0.5) * 0.05; // Reduced variance for more stable chart
-      const dayValue = currentValue * (1 + variance);
-      values.push(Math.round(dayValue));
-=======
   // Generate consistent portfolio history based on actual data
   useEffect(() => {
     if (portfolio) {
-      // If portfolio has a history array, use it. Otherwise, fallback to static values.
-      // Example: portfolio.history = [{date: '2025-09-22', value: 10500}, ...]
+      // Generate portfolio history using current value for all days
       let labels: string[] = [];
       let values: number[] = [];
-      if (portfolio.history && Array.isArray(portfolio.history)) {
-        portfolio.history.slice(-7).forEach((entry, idx, arr) => {
-          const date = new Date(entry.date);
-          labels.push(idx === arr.length - 1 ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short' }));
-          values.push(entry.value);
-        });
-      } else {
-        // Fallback: use current value for all days
-        for (let i = 6; i >= 0; i--) {
-          const date = new Date();
-          date.setDate(date.getDate() - i);
-          labels.push(i === 0 ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short' }));
-          values.push(portfolio.totalValue || 10000);
-        }
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        labels.push(i === 0 ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short' }));
+        values.push(portfolio.totalValue || 10000);
       }
       setPortfolioHistory({ labels, values });
->>>>>>> 9790dcde3109e1967743b402af1851c88dc808fc
     }
   }, [portfolio]);
 
@@ -225,15 +197,15 @@ export default function MarketDashboard() {
                 </Text>
                 <View style={styles.dailyChangeRow}>
                   <Ionicons
-                    name={(portfolio?.todaysPL || 0) >= 0 ? 'trending-up' : 'trending-down'}
+                    name={(portfolio?.todaysPL ?? 0) >= 0 ? 'trending-up' : 'trending-down'}
                     size={18}
-                    color={(portfolio?.todaysPL || 0) >= 0 ? theme.colors.bullish : theme.colors.bearish}
+                    color={(portfolio?.todaysPL ?? 0) >= 0 ? theme.colors.bullish : theme.colors.bearish}
                   />
                   <Text style={[
                     styles.dailyChange,
-                    { color: (portfolio?.todaysPL || 0) >= 0 ? theme.colors.bullish : theme.colors.bearish }
+                    { color: (portfolio?.todaysPL ?? 0) >= 0 ? theme.colors.bullish : theme.colors.bearish }
                   ]}>
-                    {(portfolio?.todaysPL || 0) >= 0 ? '+' : ''}{formatCurrency(portfolio?.todaysPL || 0)} today
+                    {(portfolio?.todaysPL ?? 0) >= 0 ? '+' : ''}{formatCurrency(portfolio?.todaysPL || 0)} today
                   </Text>
                 </View>
               </View>

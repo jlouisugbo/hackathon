@@ -266,7 +266,7 @@ async function executeTradeWithDatabase(
 }
 
 // POST /api/trades/market - Execute market order
-router.post('/market', (req, res) => {
+router.post('/market', async (req, res) => {
   try {
     const tradeRequest: TradeRequest = req.body;
     const { playerId, type, shares, accountType } = tradeRequest;
@@ -507,7 +507,7 @@ router.post('/market', (req, res) => {
 });
 
 // POST /api/trades/limit - Place limit order
-router.post('/limit', (req, res) => {
+router.post('/limit', async (req, res) => {
   try {
     const { playerId, type, shares, limitPrice, accountType } = req.body;
     const userId = req.headers['user-id'] as string || 'user-1'; // Demo user ID

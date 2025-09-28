@@ -23,6 +23,7 @@
       "apiUrl": "https://player-stock-market-backend.onrender.com",
       "socketUrl": "https://player-stock-market-backend.onrender.com"
     },
-    "scheme": "player-stock-market"
+    "scheme": "player-stock-market",
+    "platforms": ["ios", "android", "web"]
   }
 }

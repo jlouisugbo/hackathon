@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { Portfolio, Holding, Player } from '../../../shared/src/types';
+import { Portfolio, Holding, Player } from '@player-stock-market/shared';
 import { apiService } from '../services/api';
 import { useAuth } from './AuthContext';
 
@@ -21,7 +21,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const updateTimeoutRef = useRef<NodeJS.Timeout>();
+  const updateTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const [userTrades, setUserTrades] = useState<{season: Holding[], live: Holding[]}>({season: [], live: []});
 
   useEffect(() => {

@@ -21,7 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 // Components
-import { PriceChart } from '../components/PriceChart';
+import PriceChart from '../components/PriceChart';
 import PortfolioChart from '../components/PortfolioChart';
 
 // Contexts and utilities
@@ -30,7 +30,7 @@ import { useSocket } from '../context/SocketContext';
 import { useGame } from '../context/GameContext';
 import { theme } from '../theme/theme';
 import { formatCurrency, formatPercent, formatDate } from '../utils/formatters';
-import { Holding, Trade } from '../../../../shared/src/types';
+import { Holding, Trade } from '@player-stock-market/shared';
 
 const { width } = Dimensions.get('window');
 
@@ -139,9 +139,9 @@ export default function PortfolioScreen() {
                   <Text style={styles.metricLabel}>Today's P&L</Text>
                   <Text style={[
                     styles.metricValue,
-                    { color: portfolio?.todaysPL >= 0 ? theme.colors.bullish : theme.colors.bearish }
+                    { color: (portfolio?.todaysPL ?? 0) >= 0 ? theme.colors.bullish : theme.colors.bearish }
                   ]}>
-                    {portfolio?.todaysPL >= 0 ? '+' : ''}{formatCurrency(portfolio?.todaysPL || 0)}
+                    {(portfolio?.todaysPL ?? 0) >= 0 ? '+' : ''}{formatCurrency(portfolio?.todaysPL || 0)}
                   </Text>
                 </View>
                 <View style={styles.metric}>
@@ -385,7 +385,7 @@ export default function PortfolioScreen() {
                   <View style={styles.liveStatItem}>
                     <Text style={[
                       styles.liveStatValue,
-                      { color: portfolio?.livePL >= 0 ? theme.colors.bullish : theme.colors.bearish }
+                      { color: (portfolio?.livePL ?? 0) >= 0 ? theme.colors.bullish : theme.colors.bearish }
                     ]}>
                       {formatCurrency(portfolio?.livePL || 0)}
                     </Text>

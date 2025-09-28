@@ -12,7 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
-import { Player } from '../../../../shared/src/types';
+import { Player } from '@player-stock-market/shared';
 import { theme } from '../theme/theme';
 import { formatCurrency, formatPercent } from '../utils/formatters';
 

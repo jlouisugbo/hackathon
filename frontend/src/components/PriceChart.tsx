@@ -9,7 +9,7 @@ import {
 } from 'react-native-chart-kit';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { PricePoint } from '../../../../shared/src/types';
+import { PricePoint } from '@player-stock-market/shared';
 import { theme } from '../theme/theme';
 
 interface PriceChartProps {

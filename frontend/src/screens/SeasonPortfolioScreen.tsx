@@ -235,7 +235,7 @@ export default function SeasonPortfolioScreen() {
         <FlatList
           data={portfolio.seasonHoldings}
           renderItem={renderHolding}
-          keyExtractor={(item, index) => item.id || `${item.playerId}-${index}`}
+          keyExtractor={(item, index) => `${item.playerId}-${index}`}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }

@@ -9,7 +9,7 @@ import {
   LeaderboardEntry,
   LiveGame,
   PaginatedResponse
-} from '../../../shared/src/types';
+} from '@player-stock-market/shared';
 
 const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:3001';
 const API_TIMEOUT = 10000; // 10 seconds
@@ -32,11 +32,15 @@ class ApiService {
 
     // Get auth token if available
     const token = await AsyncStorage.getItem('auth_token');
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'user-id': 'demo-user', // Demo fallback
-      ...options.headers,
     };
+
+    // Add any additional headers from options
+    if (options.headers && typeof options.headers === 'object' && !Array.isArray(options.headers)) {
+      Object.assign(headers, options.headers);
+    }
 
     // Add authorization header if token exists
     if (token && token !== 'demo-token') {
@@ -166,7 +170,7 @@ class ApiService {
       accountType?: 'season' | 'live';
       type?: 'buy' | 'sell';
     }
-  ): Promise<PaginatedResponse<Trade>> {
+  ): Promise<ApiResponse<Trade[]>> {
     const searchParams = new URLSearchParams();
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
@@ -225,7 +229,7 @@ class ApiService {
   async getSeasonLeaderboard(params?: {
     limit?: number;
     page?: number;
-  }): Promise<PaginatedResponse<LeaderboardEntry>> {
+  }): Promise<ApiResponse<LeaderboardEntry[]>> {
     const searchParams = new URLSearchParams();
     if (params) {
       Object.entries(params).forEach(([key, value]) => {

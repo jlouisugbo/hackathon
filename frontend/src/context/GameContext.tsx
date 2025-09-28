@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { LiveGame, Player, TradeRequest, Trade } from '../../../shared/src/types';
+import { LiveGame, Player, TradeRequest, Trade } from '@player-stock-market/shared';
 import { apiService } from '../services/api';
 import { usePortfolio } from './PortfolioContext';
 
@@ -117,6 +117,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         
         // Add the trade to user's portfolio
         if (tradeRequest.type === 'buy') {
+          console.log('🛒 BUY TRADE - Creating holding:', {
+            playerId: tradeRequest.playerId,
+            shares: tradeRequest.shares,
+            totalAmount: response.data.totalAmount
+          });
+          
           const holding = {
             playerId: tradeRequest.playerId,
             playerName: response.data.playerName,
@@ -131,10 +137,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
             holdingBonus: 0,
             holdingMultiplier: 1,
             // Add unique identifier to prevent React key conflicts
-            id: `${tradeRequest.playerId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+            id: `trade-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${Math.random().toString(36).substr(2, 9)}-${Math.random().toString(36).substr(2, 9)}`
           };
+          
+          console.log('🛒 BUY TRADE - Calling addUserTrade with:', holding);
           addUserTrade(holding, tradeRequest.accountType);
-          // Update cash balance (decrease for buy)
+          
+          console.log('🛒 BUY TRADE - Calling updateCashBalance with amount:', response.data.totalAmount);
           updateCashBalance(response.data.totalAmount, 'buy');
         } else if (tradeRequest.type === 'sell') {
           // For sells, we need to remove shares from existing holdings

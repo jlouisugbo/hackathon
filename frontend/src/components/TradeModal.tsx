@@ -19,7 +19,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
-import { Player, TradeRequest } from '../../../../shared/src/types';
+import { Player, TradeRequest } from '@player-stock-market/shared';
 import { theme } from '../theme/theme';
 import { formatCurrency, formatPercent } from '../utils/formatters';
 

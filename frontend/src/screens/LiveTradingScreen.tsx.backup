@@ -186,6 +186,10 @@ export default function LiveTradingScreen() {
           <Text style={styles.flashTitle}>⚡ FLASH MULTIPLIERS ACTIVE</Text>
         </View>
 
+<<<<<<< HEAD
+        {Array.from(flashMultipliers.values()).map((flash: FlashMultiplier, index) => (
+          <View key={`${flash.playerId}-${index}`} style={styles.flashItem}>
+=======
         {Array.from(flashMultipliers.values()).map((flash: FlashMultiplier) => (
           <View
             key={flash.playerId}
@@ -200,6 +204,7 @@ export default function LiveTradingScreen() {
               }
             }}
           >
+>>>>>>> 9790dcde3109e1967743b402af1851c88dc808fc
             <View style={styles.flashContent}>
               <Text style={styles.flashPlayerName}>{flash.playerName}</Text>
               <Text style={styles.flashDescription}>{flash.eventDescription}</Text>

@@ -21,7 +21,7 @@ import { useSocket } from '../context/SocketContext';
 import { apiService } from '../services/api';
 import { theme } from '../theme/theme';
 import { formatCurrency, formatPercent, formatRank } from '../utils/formatters';
-import { LeaderboardEntry } from '../../../../shared/src/types';
+import { LeaderboardEntry } from '@player-stock-market/shared';
 
 type LeaderboardType = 'season' | 'live' | 'daily';
 
