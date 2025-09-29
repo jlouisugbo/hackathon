@@ -37,16 +37,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkExistingAuth = async () => {
     try {
-      // Clear any existing auth data to force login screen
-      await AsyncStorage.removeItem(TOKEN_KEY);
-      await AsyncStorage.removeItem(USER_KEY);
-      console.log('🧹 Cleared stored auth data to show login screen');
+      // Check for existing auth data
+      const storedToken = await AsyncStorage.getItem(TOKEN_KEY);
+      const storedUser = await AsyncStorage.getItem(USER_KEY);
       
-      // Don't set any user data - this will show the login screen
-      setToken(null);
-      setUser(null);
+      if (storedToken && storedUser) {
+        console.log('🔐 Found existing auth data, restoring user session');
+        setToken(storedToken);
+        setUser(JSON.parse(storedUser));
+      } else {
+        console.log('👤 No existing auth data found, creating demo user');
+        // Create a demo user with the ID that the backend expects
+        const demoUser = {
+          id: 'demo-user',
+          email: 'demo@example.com',
+          username: 'DemoTrader',
+          createdAt: new Date().toISOString()
+        };
+        
+        // Store the demo user
+        await AsyncStorage.setItem(TOKEN_KEY, 'demo-token');
+        await AsyncStorage.setItem(USER_KEY, JSON.stringify(demoUser));
+        await AsyncStorage.setItem('user_id', 'demo-user');
+        
+        setToken('demo-token');
+        setUser(demoUser);
+        console.log('🎮 Created demo user with backend-compatible ID');
+      }
     } catch (error) {
       console.error('Error checking existing auth:', error);
+      setToken(null);
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -70,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const demoUser = {
         id: 'demo-user',
         email: 'demo@example.com',
-        username: 'DemoUser',
+        username: 'DemoTrader',
         createdAt: new Date().toISOString()
       };
       setUser(demoUser);

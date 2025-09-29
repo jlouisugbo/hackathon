@@ -46,7 +46,8 @@ export default function LiveTradingScreen() {
     flashMultipliers,
     gameEvents,
     isConnected,
-    joinLiveTrading
+    joinLiveTrading,
+    joinRoomWithAuth
   } = useSocket();
   const { portfolio, refreshPortfolio } = usePortfolio();
 
@@ -74,6 +75,7 @@ export default function LiveTradingScreen() {
 
   useEffect(() => {
     if (isConnected) {
+      joinRoomWithAuth();
       joinLiveTrading();
       // Refresh portfolio when joining live trading to get updated trades
       refreshPortfolio();

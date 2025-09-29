@@ -36,7 +36,7 @@ const { width } = Dimensions.get('window');
 
 export default function PortfolioScreen() {
   const { portfolio, loading, error, refreshPortfolio, updatePortfolioValues } = usePortfolio();
-  const { priceUpdates, isConnected, joinRoom } = useSocket();
+  const { priceUpdates, isConnected, joinRoomWithAuth } = useSocket();
   const { players, executeTrade } = useGame();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -45,7 +45,7 @@ export default function PortfolioScreen() {
 
   useEffect(() => {
     if (isConnected) {
-      joinRoom('user-1', 'DemoUser');
+      joinRoomWithAuth();
     }
   }, [isConnected]);
 

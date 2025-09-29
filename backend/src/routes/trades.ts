@@ -1,6 +1,6 @@
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { getPlayers, getPortfolios, getTrades, addTrade, portfolios, players, createLimitOrder, getUserLimitOrders, executeTradeOrder, updatePlayerPrice } from '../data/mockData';
+import { getPlayers, getPortfolios, getTrades, addTrade, portfolios, players, createLimitOrder, getUserLimitOrders, executeTradeOrder, updatePlayerPrice, createDemoPortfolio } from '../data/mockData';
 import { databaseService } from '../services/databaseService';
 import { authService } from '../services/authService';
 import { ApiResponse, Trade, TradeRequest, Portfolio } from '../types';
@@ -12,6 +12,14 @@ const router = express.Router();
 // POST /api/trades - Execute trade (simplified endpoint for demo)
 router.post('/', async (req, res) => {
   try {
+    console.log('🔍 Trade request received:', {
+      body: req.body,
+      headers: {
+        authorization: req.headers.authorization,
+        'user-id': req.headers['user-id']
+      }
+    });
+    
     const tradeRequest = req.body;
     const { playerId, playerName, type, shares, orderType = 'market', accountType = 'season' } = tradeRequest;
     
@@ -21,8 +29,13 @@ router.post('/', async (req, res) => {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       try {
         const token = authHeader.substring(7);
-        const decoded = authService.verifyToken(token);
-        userId = decoded.id;
+        // Handle demo token
+        if (token === 'demo-token') {
+          userId = req.headers['user-id'] as string || 'demo-user';
+        } else {
+          const decoded = authService.verifyToken(token);
+          userId = decoded.id;
+        }
       } catch (error) {
         return res.status(401).json({
           success: false,
@@ -36,7 +49,9 @@ router.post('/', async (req, res) => {
     }
 
     // Validation
+    console.log('🔍 Validating trade request:', { playerId, type, shares, accountType });
     if (!playerId || !type || !shares) {
+      console.log('❌ Missing required fields:', { playerId, type, shares });
       return res.status(400).json({
         success: false,
         error: 'Missing required fields',
@@ -82,6 +97,13 @@ router.post('/', async (req, res) => {
     );
 
     const totalAmount = shares * currentPrice;
+
+    // Ensure user has a portfolio (create one if they don't)
+    let userPortfolio = portfolios.find(p => p.userId === userId);
+    if (!userPortfolio) {
+      console.log(`📊 Creating portfolio for user: ${userId}`);
+      userPortfolio = createDemoPortfolio(userId);
+    }
 
     // Use mock data for session persistence (no database)
     let tradeResult;

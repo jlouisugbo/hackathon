@@ -1,4 +1,5 @@
 import React from 'react';
+import { LogBox } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
@@ -6,7 +7,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
-
+LogBox.ignoreAllLogs(true);
 // Context Providers
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { SocketProvider } from './src/context/SocketContext';
@@ -22,7 +23,6 @@ import ProfileScreen from './src/screens/ProfileScreen';
 import MarketDashboard from './src/screens/MarketDashboard';
 
 // Components
-import AuthFlow from './src/components/AuthFlow';
 
 // Theme
 import { theme } from './src/theme/theme';
@@ -126,9 +126,9 @@ function AppContent() {
     );
   }
 
-  // Show auth flow if no user is authenticated
+  // Show auth screen if no user is authenticated
   if (!user) {
-    return <AuthFlow onAuthSuccess={() => {}} />;
+    return <AuthScreen />;
   }
 
   return (

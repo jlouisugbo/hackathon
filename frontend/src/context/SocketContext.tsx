@@ -14,6 +14,7 @@ import {
   Portfolio,
   LiveGame
 } from '@player-stock-market/shared';
+import { useAuth } from './AuthContext';
 
 interface SocketContextType {
   socket: Socket | null;
@@ -33,7 +34,8 @@ interface SocketContextType {
   marketSentiment: any | null;
 
   // Socket actions
-  joinRoom: (userId: string, username: string) => void;
+  joinRoom: (userId?: string, username?: string) => void;
+  joinRoomWithAuth: () => void;
   sendChatMessage: (message: string) => void;
   subscribeToPlayer: (playerId: string) => void;
   unsubscribeFromPlayer: (playerId: string) => void;
@@ -51,6 +53,7 @@ const MAX_GAME_EVENTS = 50;
 const MAX_NOTIFICATIONS = 20;
 
 export function SocketProvider({ children }: { children: React.ReactNode }) {
+  const { user, token } = useAuth();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [priceUpdates, setPriceUpdates] = useState(new Map());
@@ -276,10 +279,32 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Socket action functions
-  const joinRoom = (userId: string, username: string) => {
+  const joinRoom = (userId?: string, username?: string) => {
     if (socket && isConnected && !hasJoinedRoomRef.current) {
       hasJoinedRoomRef.current = true;
-      socket.emit('join_room', { userId, username });
+      // Use provided values or fallback to demo values
+      const finalUserId = userId || 'demo_user';
+      const finalUsername = username || 'DemoUser';
+      socket.emit('join_room', { userId: finalUserId, username: finalUsername });
+    }
+  };
+
+  // Auto-join with authenticated user data
+  const joinRoomWithAuth = () => {
+    if (socket && isConnected && !hasJoinedRoomRef.current) {
+      hasJoinedRoomRef.current = true;
+      if (user && token) {
+        console.log('🔐 Joining room with authenticated user:', user.username);
+        socket.emit('join_room', { 
+          userId: user.id, 
+          username: user.username,
+          token: token 
+        });
+      } else {
+        console.log('👤 Joining room with demo user (no auth data available)');
+        // Fallback to demo user
+        socket.emit('join_room', { userId: 'demo_user', username: 'DemoUser' });
+      }
     }
   };
 
@@ -325,6 +350,27 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Rejoin room when user data becomes available
+  useEffect(() => {
+    if (socket && isConnected && user && token && hasJoinedRoomRef.current) {
+      console.log('🔄 User data available, rejoining room with:', user.username);
+      // Reset the join flag and rejoin with authenticated user
+      hasJoinedRoomRef.current = false;
+      joinRoomWithAuth();
+    }
+  }, [user, token, socket, isConnected]);
+
+  // Debug logging for user state
+  useEffect(() => {
+    console.log('👤 Auth state changed:', { 
+      hasUser: !!user, 
+      hasToken: !!token, 
+      username: user?.username,
+      isConnected,
+      hasJoinedRoom: hasJoinedRoomRef.current
+    });
+  }, [user, token, isConnected]);
+
   // Ping for connection health
   useEffect(() => {
     if (socket && isConnected) {
@@ -353,6 +399,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     volumeAlerts,
     marketSentiment,
     joinRoom,
+    joinRoomWithAuth,
     sendChatMessage,
     subscribeToPlayer,
     unsubscribeFromPlayer,

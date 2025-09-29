@@ -33,6 +33,7 @@ class ApiService {
     // Get auth token if available
     const token = await AsyncStorage.getItem('auth_token');
     const userId = await AsyncStorage.getItem('user_id');
+    console.log('🔍 API Request - Token:', token, 'UserID:', userId);
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'user-id': userId || 'demo-user', // Use actual user ID or demo fallback
@@ -44,9 +45,12 @@ class ApiService {
     }
 
     // Add authorization header if token exists
-    if (token && token !== 'demo-token') {
+    if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
+
+    console.log('🔍 API Request Headers:', headers);
+    console.log('🔍 API Request Body:', options.body);
 
     try {
       const response = await fetch(url, {

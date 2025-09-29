@@ -60,14 +60,6 @@ export default function AuthScreen() {
     }
   };
 
-  const handleDemoLogin = async () => {
-    try {
-      const demoEmail = `demo_${Date.now()}@example.com`;
-      await register(demoEmail, 'demo123', `Player${Math.floor(Math.random() * 1000)}`);
-    } catch (error) {
-      Alert.alert('Demo Login Failed', 'Unable to create demo account');
-    }
-  };
 
   const toggleMode = () => {
     setIsLogin(!isLogin);
@@ -191,22 +183,6 @@ export default function AuthScreen() {
                   : "Already have an account? Sign In"
                 }
               </Button>
-
-              <View style={styles.divider}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>OR</Text>
-                <View style={styles.dividerLine} />
-              </View>
-
-              <Button
-                mode="outlined"
-                onPress={handleDemoLogin}
-                disabled={loading}
-                style={styles.demoButton}
-                textColor={theme.colors.primary}
-              >
-                🎮 Quick Demo Account
-              </Button>
             </View>
           </Card.Content>
         </Card>
@@ -283,25 +259,6 @@ const styles = StyleSheet.create({
   },
   toggleButton: {
     marginTop: 8,
-    borderColor: theme.colors.primary,
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 16,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: theme.colors.cardBorder,
-  },
-  dividerText: {
-    marginHorizontal: 16,
-    color: theme.colors.neutral,
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  demoButton: {
     borderColor: theme.colors.primary,
   },
   features: {

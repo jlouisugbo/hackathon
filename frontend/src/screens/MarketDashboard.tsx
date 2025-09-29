@@ -36,7 +36,7 @@ const { width } = Dimensions.get('window');
 
 export default function MarketDashboard() {
   const { portfolio, loading, error, refreshPortfolio } = usePortfolio();
-  const { priceUpdates, isConnected, joinRoom, flashMultipliers, gameEvents } = useSocket();
+  const { priceUpdates, isConnected, joinRoomWithAuth, flashMultipliers, gameEvents } = useSocket();
   const { players, executeTrade, clearAllData, forceRestart, clearAllStorage, refreshPlayers, clearCachedPlayers } = useGame();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -54,9 +54,9 @@ export default function MarketDashboard() {
   const [portfolioHistory, setPortfolioHistory] = useState<{ labels: string[]; values: number[] }>({ labels: [], values: [] });
 
   useEffect(() => {
-    // Auto-join socket room with demo user
+    // Auto-join socket room with authenticated user
     if (isConnected) {
-      joinRoom('user-1', 'DemoUser');
+      joinRoomWithAuth();
     }
   }, [isConnected]);
 

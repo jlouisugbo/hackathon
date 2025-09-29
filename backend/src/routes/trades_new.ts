@@ -1,6 +1,6 @@
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { getPlayers, getPortfolios, getTrades, addTrade, portfolios, players, executeTradeOrder } from '../data/mockData';
+import { getPlayers, getPortfolios, getTrades, addTrade, portfolios, players, executeTradeOrder, createDemoPortfolio } from '../data/mockData';
 import { databaseService } from '../services/databaseService';
 import { authService } from '../services/authService';
 import { ApiResponse, Trade, TradeRequest, Portfolio } from '../types';
@@ -19,8 +19,13 @@ router.post('/', async (req, res) => {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       try {
         const token = authHeader.substring(7);
-        const decoded = authService.verifyToken(token);
-        userId = decoded.id;
+        // Handle demo token
+        if (token === 'demo-token') {
+          userId = req.headers['user-id'] as string || 'demo-user';
+        } else {
+          const decoded = authService.verifyToken(token);
+          userId = decoded.id;
+        }
       } catch (error) {
         return res.status(401).json({
           success: false,
@@ -80,6 +85,13 @@ router.post('/', async (req, res) => {
       // Execute with Supabase
       tradeResult = await executeTradeWithDatabase(userId, playerId, playerName || player.name, type, shares, currentPrice, accountType, totalAmount);
     } else {
+      // Ensure user has a portfolio in mock data (create one if they don't)
+      let userPortfolio = portfolios.find(p => p.userId === userId);
+      if (!userPortfolio) {
+        console.log(`📊 Creating portfolio for user: ${userId}`);
+        userPortfolio = createDemoPortfolio(userId);
+      }
+      
       // Fallback to mock data
       tradeResult = executeTradeOrder(userId, playerId, shares, type, accountType);
     }

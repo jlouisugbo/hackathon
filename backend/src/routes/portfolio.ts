@@ -11,13 +11,23 @@ router.get('/:userId', async (req, res) => {
     const { userId } = req.params;
     
     // Try to get portfolio from database first
-    let portfolio = await databaseService.getPortfolioByUserId(userId);
+    let databasePortfolio = await databaseService.getPortfolioByUserId(userId);
     
-    // If not found in database, try mock data as fallback
-    if (!portfolio) {
-      console.log(`📊 Portfolio not found in database for user: ${userId}, trying mock data`);
-      const portfolioList = getPortfolios();
-      portfolio = portfolioList.find(p => p.userId === userId);
+    // Always check mock data as well
+    const portfolioList = getPortfolios();
+    let mockPortfolio = portfolioList.find(p => p.userId === userId);
+    
+    // Use mock data if it exists and is more recent, or if database portfolio doesn't exist
+    let portfolio;
+    if (mockPortfolio && (!databasePortfolio || mockPortfolio.lastUpdated > databasePortfolio.lastUpdated)) {
+      console.log(`📊 Using mock data portfolio for user: ${userId} (more recent or database empty)`);
+      portfolio = mockPortfolio;
+    } else if (databasePortfolio) {
+      console.log(`📊 Using database portfolio for user: ${userId}`);
+      portfolio = databasePortfolio;
+    } else {
+      console.log(`📊 No portfolio found for user: ${userId}`);
+      portfolio = null;
     }
 
     // If still not found, generate a dummy portfolio for any user ID

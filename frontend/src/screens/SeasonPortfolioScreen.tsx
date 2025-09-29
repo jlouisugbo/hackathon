@@ -33,7 +33,7 @@ import { Holding } from '@player-stock-market/shared';
 export default function SeasonPortfolioScreen() {
   const navigation = useNavigation();
   const { portfolio, loading, error, refreshPortfolio, updateHoldingPrice } = usePortfolio();
-  const { priceUpdates, isConnected, joinRoom } = useSocket();
+  const { priceUpdates, isConnected, joinRoomWithAuth } = useSocket();
   const { players, executeTrade } = useGame();
   const [refreshing, setRefreshing] = useState(false);
   const [sellModalVisible, setSellModalVisible] = useState(false);
@@ -41,9 +41,9 @@ export default function SeasonPortfolioScreen() {
   const [sellQuantity, setSellQuantity] = useState('');
 
   useEffect(() => {
-    // Auto-join socket room with demo user
+    // Auto-join socket room with authenticated user
     if (isConnected) {
-      joinRoom('user-1', 'DemoUser');
+      joinRoomWithAuth();
     }
   }, [isConnected]);
 
