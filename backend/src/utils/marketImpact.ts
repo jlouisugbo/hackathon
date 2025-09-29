@@ -1,5 +1,5 @@
 import { Player } from '../types';
-import { getPlayers } from '../data/mockData';
+import { getPlayers } from '../data/nbaData';
 
 export interface MarketImpactResult {
   priceImpact: number;

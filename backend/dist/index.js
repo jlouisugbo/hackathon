@@ -14,10 +14,11 @@ const http_1 = require("http");
 const socket_io_1 = require("socket.io");
 const cors_1 = __importDefault(require("cors"));
 const socketHandler_1 = require("./socket/socketHandler");
-const mockData_1 = require("./data/mockData");
-const gameSimulation_1 = require("./socket/gameSimulation");
+const nbaData_1 = require("./data/nbaData");
 const priceEngine_1 = __importDefault(require("./utils/priceEngine"));
 const supabase_1 = require("./config/supabase");
+const liveGameManager_1 = require("./services/liveGameManager");
+const realPriceEngine_1 = require("./utils/realPriceEngine");
 // Import routes
 const players_1 = __importDefault(require("./routes/players"));
 const portfolio_1 = __importDefault(require("./routes/portfolio"));
@@ -25,6 +26,8 @@ const trades_1 = __importDefault(require("./routes/trades"));
 const leaderboard_1 = __importDefault(require("./routes/leaderboard"));
 const game_1 = __importDefault(require("./routes/game"));
 const auth_1 = __importDefault(require("./routes/auth"));
+const liveData_1 = __importDefault(require("./routes/liveData"));
+const gameSimulation_1 = __importDefault(require("./routes/gameSimulation"));
 const app = (0, express_1.default)();
 const server = (0, http_1.createServer)(app);
 const io = new socket_io_1.Server(server, {
@@ -63,6 +66,8 @@ app.use('/api/portfolio', portfolio_1.default);
 app.use('/api/trades', trades_1.default);
 app.use('/api/leaderboard', leaderboard_1.default);
 app.use('/api/game', game_1.default);
+app.use('/api/live', liveData_1.default);
+app.use('/api/simulation', gameSimulation_1.default);
 // Global error handler
 app.use((err, req, res, next) => {
     console.error('Global error handler:', err);
@@ -90,16 +95,22 @@ server.listen(PORT, () => {
     setTimeout(async () => {
         try {
             console.log('🔄 Starting background initialization...');
-            // Initialize mock data and socket handlers
-            (0, mockData_1.initializeMockData)();
+            // Initialize NBA data and socket handlers
+            await (0, nbaData_1.initializeNBAData)();
             (0, socketHandler_1.initializeSocketHandlers)(io);
             // Initialize Supabase (optional for demo)
             (0, supabase_1.initializeSupabaseTables)();
             // Initialize price engine
             const priceEngine = priceEngine_1.default.getInstance();
-            const players = (0, mockData_1.getPlayers)();
-            // Start game simulation LAST (most resource intensive)
-            (0, gameSimulation_1.startGameSimulation)(io);
+            const players = (0, nbaData_1.getPlayers)();
+            // Set base prices for real price engine
+            players.forEach(player => {
+                realPriceEngine_1.realPriceEngine.setBasePrice(player.id, player.currentPrice);
+            });
+            // Set Socket.IO instance for live game manager
+            liveGameManager_1.liveGameManager.setSocketIO(io);
+            // Start live game monitoring
+            await liveGameManager_1.liveGameManager.startLiveMonitoring();
             initializationComplete = true;
             console.log('✅ Background initialization complete');
         }

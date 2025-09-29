@@ -1,5 +1,5 @@
 import express from 'express';
-import { getPortfolios, getUsers, portfolios, getPlayers } from '../data/mockData';
+import { getPortfolios, getUsers, portfolios, getPlayers } from '../data/nbaData';
 import { databaseService } from '../services/databaseService';
 import { ApiResponse, Portfolio, Holding } from '../types';
 

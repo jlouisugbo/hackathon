@@ -1,6 +1,6 @@
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { getPlayers, getPortfolios, getTrades, addTrade, portfolios, players, executeTradeOrder, createDemoPortfolio } from '../data/mockData';
+import { getPlayers, getPortfolios, getTrades, addTrade, portfolios, players, executeTradeOrder, createDemoPortfolio } from '../data/nbaData';
 import { databaseService } from '../services/databaseService';
 import { authService } from '../services/authService';
 import { ApiResponse, Trade, TradeRequest, Portfolio } from '../types';

@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { supabase, TABLES, isSupabaseConfigured } from '../config/supabase';
 import { User, CreateUserRequest } from '../types';
-import { addDemoUser, getDemoUser, getDemoUserByEmail, updateDemoUserSession, getDemoOnlineUsersCount, createDemoPortfolio } from '../data/mockData';
+import { addDemoUser, getDemoUser, getDemoUserByEmail, updateDemoUserSession, getDemoOnlineUsersCount, createDemoPortfolio } from '../data/nbaData';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'hackathon-demo-secret-key';
 const JWT_EXPIRES_IN = '24h'; // Long expiry for demo

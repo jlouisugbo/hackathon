@@ -7,7 +7,7 @@ exports.authService = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const supabase_1 = require("../config/supabase");
-const mockData_1 = require("../data/mockData");
+const nbaData_1 = require("../data/nbaData");
 const JWT_SECRET = process.env.JWT_SECRET || 'hackathon-demo-secret-key';
 const JWT_EXPIRES_IN = '24h'; // Long expiry for demo
 class AuthService {
@@ -87,7 +87,7 @@ class AuthService {
                 return { user, token };
             }
             // Fallback to in-memory storage for demo
-            const existingUser = (0, mockData_1.getDemoUserByEmail)(credentials.email);
+            const existingUser = (0, nbaData_1.getDemoUserByEmail)(credentials.email);
             if (existingUser) {
                 throw new Error('User with this email already exists');
             }
@@ -99,7 +99,7 @@ class AuthService {
                 createdAt: new Date().toISOString()
             };
             // Store in demo user storage
-            (0, mockData_1.addDemoUser)({
+            (0, nbaData_1.addDemoUser)({
                 ...user,
                 password_hash: hashedPassword,
                 total_portfolio_value: 10000,
@@ -107,7 +107,7 @@ class AuthService {
                 live_rank: 0
             });
             // Create initial portfolio for demo user
-            (0, mockData_1.createDemoPortfolio)(user.id);
+            (0, nbaData_1.createDemoPortfolio)(user.id);
             const token = this.generateToken(user);
             return { user, token };
         }
@@ -151,7 +151,7 @@ class AuthService {
                 return { user, token };
             }
             // Fallback for demo - check demo users
-            const demoUser = (0, mockData_1.getDemoUserByEmail)(credentials.email);
+            const demoUser = (0, nbaData_1.getDemoUserByEmail)(credentials.email);
             if (demoUser) {
                 const isValidPassword = await this.comparePassword(credentials.password, demoUser.password_hash);
                 if (!isValidPassword) {
@@ -203,7 +203,7 @@ class AuthService {
                 };
             }
             // Fallback to demo data
-            const demoUser = (0, mockData_1.getDemoUser)(userId);
+            const demoUser = (0, nbaData_1.getDemoUser)(userId);
             if (demoUser) {
                 return {
                     id: demoUser.id,
@@ -235,7 +235,7 @@ class AuthService {
             }
             else {
                 // Fallback to demo session management
-                (0, mockData_1.updateDemoUserSession)(userId, socketId, isOnline);
+                (0, nbaData_1.updateDemoUserSession)(userId, socketId, isOnline);
             }
         }
         catch (error) {
@@ -254,7 +254,7 @@ class AuthService {
             }
             else {
                 // Fallback to demo users count
-                return (0, mockData_1.getDemoOnlineUsersCount)();
+                return (0, nbaData_1.getDemoOnlineUsersCount)();
             }
         }
         catch (error) {

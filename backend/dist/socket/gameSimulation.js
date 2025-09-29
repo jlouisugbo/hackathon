@@ -1,11 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.startGameSimulation = startGameSimulation;
+exports.processLiveGameData = processLiveGameData;
 exports.stopGameSimulation = stopGameSimulation;
 exports.getActiveFlashMultipliers = getActiveFlashMultipliers;
+exports.startGameSimulation = startGameSimulation;
 const uuid_1 = require("uuid");
-const mockData_1 = require("../data/mockData");
+const nbaData_1 = require("../data/nbaData");
 const socketHandler_1 = require("./socketHandler");
+const liveGameManager_1 = require("../services/liveGameManager");
 // Game simulation state
 let simulationInterval = null;
 let flashMultiplierInterval = null;
@@ -13,15 +15,182 @@ let gameEventInterval = null;
 let priceUpdateInterval = null;
 let scoreUpdateInterval = null;
 // Configuration - Enhanced for day trading simulation
-const PRICE_UPDATE_INTERVAL = 5000; // 5 seconds (faster for day trading)
+const PRICE_UPDATE_INTERVAL = 3000; // 3 seconds (faster for day trading)
 const FLASH_MULTIPLIER_CHANCE = 0.25; // 25% chance per interval (more frequent)
-const GAME_EVENT_INTERVAL = 30000; // 30 seconds (more frequent events)
-const MARKET_DATA_INTERVAL = 20000; // 20 seconds (faster market updates)
-const SCORE_UPDATE_INTERVAL = 10000; // 10 seconds (faster score updates)
+const GAME_EVENT_INTERVAL = 20000; // 20 seconds (more frequent events)
+const MARKET_DATA_INTERVAL = 15000; // 15 seconds (faster market updates)
+const SCORE_UPDATE_INTERVAL = 5000; // 5 seconds (much faster score updates)
 // Active flash multipliers
 const activeFlashMultipliers = new Map();
-// Enhanced game events for realistic day trading scenarios
-const gameEvents = [
+// Process live NBA Finals data into game events
+function processLiveGameData(plays) {
+    console.log('🔍 DEBUG: Processing live NBA Finals data into game events...');
+    console.log(`🔍 DEBUG: Input plays count: ${plays.length}`);
+    liveGameEvents = plays
+        .filter(play => play.Description && play.Description.trim() !== '')
+        .map(play => ({
+        playerId: '',
+        playerName: extractPlayerName(play.Description),
+        eventType: determineEventType(play.Description),
+        multiplier: calculateMultiplier(play.Description),
+        description: play.Description,
+        priceImpact: calculatePriceImpact(play.Description),
+        quarter: play.Quarter || 1,
+        gameTime: play.TimeRemaining || '12:00'
+    }))
+        .filter(event => event.playerName !== '');
+    console.log(`🔍 DEBUG: Processed ${liveGameEvents.length} live game events from NBA Finals`);
+    console.log(`🔍 DEBUG: First few events:`, liveGameEvents.slice(0, 3).map(e => ({ description: e.description, player: e.playerName })));
+    // Start processing events in real-time
+    startRealtimeEventProcessing();
+}
+// Start real-time event processing for NBA Finals replay
+function startRealtimeEventProcessing() {
+    if (realtimeEventInterval) {
+        clearInterval(realtimeEventInterval);
+    }
+    console.log('🔍 DEBUG: Starting real-time NBA Finals event processing...');
+    console.log(`🔍 DEBUG: Total events to process: ${liveGameEvents.length}`);
+    realtimeEventInterval = setInterval(() => {
+        if (realtimeEventIndex < liveGameEvents.length) {
+            const event = liveGameEvents[realtimeEventIndex];
+            console.log(`🔍 DEBUG: NBA Finals Event ${realtimeEventIndex + 1}/${liveGameEvents.length}: ${event.description}`);
+            console.log(`🔍 DEBUG: Event details - Player: ${event.playerName}, Type: ${event.eventType}, Impact: ${event.priceImpact}`);
+            // Process the event (this would trigger price updates, etc.)
+            // For now, just log it
+            realtimeEventIndex++;
+        }
+        else {
+            console.log('🔍 DEBUG: All NBA Finals events processed');
+            if (realtimeEventInterval) {
+                clearInterval(realtimeEventInterval);
+                realtimeEventInterval = null;
+            }
+        }
+    }, 5000); // Process one event every 5 seconds
+}
+// Extract player name from play description
+function extractPlayerName(description) {
+    // Common NBA player name patterns
+    const namePatterns = [
+        /([A-Z][a-z]+ [A-Z][a-z]+)/g, // First Last
+        /([A-Z][a-z]+ [A-Z]\. [A-Z][a-z]+)/g, // First M. Last
+    ];
+    for (const pattern of namePatterns) {
+        const matches = description.match(pattern);
+        if (matches && matches.length > 0) {
+            return matches[0];
+        }
+    }
+    return '';
+}
+// Determine event type from description
+function determineEventType(description) {
+    if (description.includes('three pointer') || description.includes('3-pointer')) {
+        return 'three_pointer';
+    }
+    else if (description.includes('dunk')) {
+        return 'dunk';
+    }
+    else if (description.includes('assist')) {
+        return 'assist';
+    }
+    else if (description.includes('steal')) {
+        return 'steal';
+    }
+    else if (description.includes('block')) {
+        return 'block';
+    }
+    else if (description.includes('rebound')) {
+        return 'rebound';
+    }
+    else if (description.includes('misses')) {
+        return 'miss';
+    }
+    else if (description.includes('turnover')) {
+        return 'turnover';
+    }
+    else if (description.includes('foul')) {
+        return 'foul';
+    }
+    return 'basket';
+}
+// Calculate multiplier based on play type
+function calculateMultiplier(description) {
+    if (description.includes('three pointer') || description.includes('3-pointer')) {
+        return 2.5;
+    }
+    else if (description.includes('dunk')) {
+        return 1.8;
+    }
+    else if (description.includes('steal')) {
+        return 3.2;
+    }
+    else if (description.includes('block')) {
+        return 2.1;
+    }
+    else if (description.includes('assist')) {
+        return 1.5;
+    }
+    else if (description.includes('misses')) {
+        return 0.5;
+    }
+    return 1.0;
+}
+// Calculate price impact based on play description
+function calculatePriceImpact(description) {
+    const baseImpact = Math.random() * 10 + 5; // 5-15 base impact
+    if (description.includes('three pointer') || description.includes('3-pointer')) {
+        return baseImpact * 1.5;
+    }
+    else if (description.includes('dunk')) {
+        return baseImpact * 1.2;
+    }
+    else if (description.includes('steal')) {
+        return baseImpact * 1.8;
+    }
+    else if (description.includes('block')) {
+        return baseImpact * 1.3;
+    }
+    else if (description.includes('misses')) {
+        return baseImpact * -0.5;
+    }
+    return baseImpact;
+}
+// Live NBA Finals data will be used instead of mock events
+let liveGameEvents = [];
+let realtimeEventIndex = 0;
+let realtimeEventInterval = null;
+// Enhanced game events for realistic day trading scenarios (fallback to real NBA data)
+let fallbackGameEvents = [];
+// Initialize fallback with real NBA data instead of mock data
+async function initializeFallbackEvents() {
+    try {
+        console.log('🏀 Initializing fallback events with real NBA data...');
+        // Get real NBA players for fallback events
+        const players = (0, nbaData_1.getPlayers)();
+        const nbaPlayers = players.slice(0, 20); // Get top 20 players
+        fallbackGameEvents = nbaPlayers.map(player => ({
+            playerId: player.id,
+            playerName: player.name,
+            eventType: 'basket',
+            multiplier: 1.0,
+            description: `${player.name} makes a play`,
+            priceImpact: Math.random() * 10 + 5,
+            quarter: Math.floor(Math.random() * 4) + 1,
+            gameTime: `${Math.floor(Math.random() * 12)}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}`
+        }));
+        console.log(`✅ Initialized ${fallbackGameEvents.length} fallback events with real NBA data`);
+    }
+    catch (error) {
+        console.error('❌ Error initializing fallback events:', error);
+        // Keep empty array as fallback
+    }
+}
+// Call initialization
+initializeFallbackEvents();
+// Original mock events as final fallback
+const mockGameEvents = [
     // High-impact plays that cause big price swings
     {
         playerId: '',
@@ -167,28 +336,39 @@ const gameEvents = [
     }
 ];
 let eventIndex = 0;
-function startGameSimulation(io) {
-    console.log('🎮 Starting game simulation...');
-    // Start price updates
-    startPriceUpdates(io);
-    // Start flash multiplier system
-    //startFlashMultiplierSystem(io);
-    // Start game events
-    startGameEvents(io);
-    // Start market data broadcasting
-    startMarketDataBroadcast(io);
-    // Start live score updates
-    startScoreUpdates(io);
-    // Start market sentiment updates for day trading
-    startMarketSentimentUpdates(io);
-    console.log('✅ Game simulation started');
-}
 function startPriceUpdates(io) {
-    priceUpdateInterval = setInterval(() => {
-        const playersList = (0, mockData_1.getPlayers)();
-        const currentGame = (0, mockData_1.getCurrentGame)();
+    priceUpdateInterval = setInterval(async () => {
+        const playersList = (0, nbaData_1.getPlayers)();
+        const currentGame = (0, nbaData_1.getCurrentGame)();
         if (!currentGame || !currentGame.isActive)
             return;
+        // Check if live games are available and use real data
+        if (liveGameManager_1.liveGameManager.isMonitoring()) {
+            console.log('🏀 Using live SportsData.io data for price updates');
+            // Live data is handled by liveGameManager, but we still need to do some price updates
+            // for players not in the live game
+            const playingPlayers = playersList.filter(p => p.isPlaying);
+            playingPlayers.forEach(player => {
+                // Reduced volatility for live game players since real data is being used
+                let volatility = player.volatility * 0.5; // 50% less volatile during live games
+                // Increase volatility if player has active flash multiplier
+                if (activeFlashMultipliers.has(player.id)) {
+                    volatility *= 2.0; // Still volatile during flash multipliers
+                }
+                // Random price change with lower frequency
+                const changePercent = (Math.random() - 0.5) * 2 * volatility * 100;
+                const priceChange = (player.currentPrice * changePercent) / 100;
+                const newPrice = Math.max(10, player.currentPrice + priceChange);
+                // Update player price
+                const oldPrice = player.currentPrice;
+                (0, nbaData_1.updatePlayerPrice)(player.id, newPrice);
+                // Broadcast price update
+                (0, socketHandler_1.broadcastPriceUpdate)(io, player.id, newPrice, newPrice - oldPrice, changePercent);
+            });
+            return;
+        }
+        // Fallback to mock data when no live games
+        console.log('📊 Using mock data for price updates');
         // Update prices for playing players more frequently
         const playingPlayers = playersList.filter(p => p.isPlaying);
         playingPlayers.forEach(player => {
@@ -207,7 +387,7 @@ function startPriceUpdates(io) {
             const newPrice = Math.max(10, player.currentPrice + priceChange);
             // Update player price
             const oldPrice = player.currentPrice;
-            (0, mockData_1.updatePlayerPrice)(player.id, newPrice);
+            (0, nbaData_1.updatePlayerPrice)(player.id, newPrice);
             // Broadcast price update
             (0, socketHandler_1.broadcastPriceUpdate)(io, player.id, newPrice, newPrice - oldPrice, changePercent);
         });
@@ -219,31 +399,43 @@ function startPriceUpdates(io) {
                 const priceChange = (player.currentPrice * changePercent) / 100;
                 const newPrice = Math.max(10, player.currentPrice + priceChange);
                 const oldPrice = player.currentPrice;
-                (0, mockData_1.updatePlayerPrice)(player.id, newPrice);
+                (0, nbaData_1.updatePlayerPrice)(player.id, newPrice);
                 (0, socketHandler_1.broadcastPriceUpdate)(io, player.id, newPrice, newPrice - oldPrice, changePercent * 100);
             }
         });
     }, PRICE_UPDATE_INTERVAL);
 }
-/*
-function startFlashMultiplierSystem(io: Server) {
-  flashMultiplierInterval = setInterval(() => {
-    const currentGame = getCurrentGame();
-    if (!currentGame || !currentGame.isActive) return;
-
-    // Random chance for flash multiplier
-    if (Math.random() < FLASH_MULTIPLIER_CHANCE) {
-      triggerFlashMultiplier(io);
-    }
-
-    // Clean up expired flash multipliers
-    cleanupExpiredMultipliers(io);
-
-  }, PRICE_UPDATE_INTERVAL);
+function startFlashMultiplierSystem(io) {
+    flashMultiplierInterval = setInterval(() => {
+        const currentGame = (0, nbaData_1.getCurrentGame)();
+        if (!currentGame || !currentGame.isActive)
+            return;
+        // Random chance for flash multiplier
+        if (Math.random() < FLASH_MULTIPLIER_CHANCE) {
+            const playersList = (0, nbaData_1.getPlayers)();
+            const playingPlayers = playersList.filter(p => p.isPlaying);
+            if (playingPlayers.length > 0) {
+                const randomPlayer = playingPlayers[Math.floor(Math.random() * playingPlayers.length)];
+                const multiplierValues = [2, 2.5, 3, 3.5, 4, 4.5, 5];
+                const multiplier = multiplierValues[Math.floor(Math.random() * multiplierValues.length)];
+                const flashData = {
+                    playerId: randomPlayer.id,
+                    playerName: randomPlayer.name,
+                    multiplier,
+                    duration: 30000, // 30 seconds
+                    startTime: Date.now(),
+                    eventDescription: generateFlashEvent(randomPlayer.name, multiplier),
+                    isActive: true
+                };
+                triggerFlashMultiplier(io, flashData);
+            }
+        }
+        // Clean up expired flash multipliers
+        cleanupExpiredMultipliers(io);
+    }, PRICE_UPDATE_INTERVAL);
 }
-*/
 function triggerFlashMultiplier(io, flashData) {
-    const playersList = (0, mockData_1.getPlayers)();
+    const playersList = (0, nbaData_1.getPlayers)();
     const playingPlayers = playersList.filter(p => p.isPlaying);
     if (playingPlayers.length === 0)
         return;
@@ -314,12 +506,16 @@ function cleanupExpiredMultipliers(io) {
 }
 function startGameEvents(io) {
     gameEventInterval = setInterval(() => {
-        const currentGame = (0, mockData_1.getCurrentGame)();
+        const currentGame = (0, nbaData_1.getCurrentGame)();
         if (!currentGame || !currentGame.isActive)
             return;
+        // Use live NBA Finals data if available, otherwise use real NBA data fallback
+        const events = liveGameEvents.length > 0 ? liveGameEvents :
+            fallbackGameEvents.length > 0 ? fallbackGameEvents :
+                mockGameEvents;
         // Trigger pre-scripted events
-        if (eventIndex < gameEvents.length) {
-            triggerGameEvent(io, gameEvents[eventIndex]);
+        if (eventIndex < events.length) {
+            triggerGameEvent(io, events[eventIndex]);
             eventIndex++;
         }
         else {
@@ -331,7 +527,7 @@ function startGameEvents(io) {
     }, GAME_EVENT_INTERVAL);
 }
 function triggerGameEvent(io, eventTemplate) {
-    const playersList = (0, mockData_1.getPlayers)();
+    const playersList = (0, nbaData_1.getPlayers)();
     const player = playersList.find(p => p.name === eventTemplate.playerName);
     if (!player)
         return;
@@ -350,7 +546,7 @@ function triggerGameEvent(io, eventTemplate) {
     // Apply price impact
     const newPrice = player.currentPrice + eventTemplate.priceImpact;
     const oldPrice = player.currentPrice;
-    (0, mockData_1.updatePlayerPrice)(player.id, newPrice);
+    (0, nbaData_1.updatePlayerPrice)(player.id, newPrice);
     // Broadcast game event
     (0, socketHandler_1.broadcastGameEvent)(io, gameEvent);
     // Broadcast price update
@@ -373,7 +569,7 @@ function triggerGameEvent(io, eventTemplate) {
     console.log(`🏀 Game event: ${gameEvent.description}`);
 }
 function generateRandomGameEvent(io) {
-    const playersList = (0, mockData_1.getPlayers)();
+    const playersList = (0, nbaData_1.getPlayers)();
     const playingPlayers = playersList.filter(p => p.isPlaying);
     if (playingPlayers.length === 0)
         return;
@@ -402,7 +598,7 @@ function generateRandomGameEvent(io) {
     // Apply price impact
     const newPrice = Math.max(10, randomPlayer.currentPrice + priceImpact);
     const oldPrice = randomPlayer.currentPrice;
-    (0, mockData_1.updatePlayerPrice)(randomPlayer.id, newPrice);
+    (0, nbaData_1.updatePlayerPrice)(randomPlayer.id, newPrice);
     // Broadcast event and price update
     (0, socketHandler_1.broadcastGameEvent)(io, gameEvent);
     const changePercent = ((newPrice - oldPrice) / oldPrice) * 100;
@@ -410,9 +606,33 @@ function generateRandomGameEvent(io) {
 }
 function startScoreUpdates(io) {
     scoreUpdateInterval = setInterval(() => {
-        const currentGame = (0, mockData_1.getCurrentGame)();
+        const currentGame = (0, nbaData_1.getCurrentGame)();
         if (!currentGame || !currentGame.isActive)
             return;
+        // More frequent scoring with realistic patterns
+        const shouldScore = Math.random() < 0.7; // 70% chance of scoring each interval
+        if (!shouldScore) {
+            // Just advance time without scoring
+            const timeAdvance = Math.floor(Math.random() * 30) + 10; // 10-40 seconds
+            const newGameTime = advanceGameTime(currentGame.timeRemaining, timeAdvance);
+            let newQuarter = currentGame.quarter;
+            // Check if quarter should advance
+            if (isQuarterOver(newGameTime.time)) {
+                newQuarter = Math.min(4, currentGame.quarter + 1);
+                newGameTime.time = '12:00'; // Reset time for new quarter
+            }
+            // Update game state
+            (0, nbaData_1.updateGameScore)(currentGame.homeScore, currentGame.awayScore, newQuarter, newGameTime.time);
+            // Broadcast score update
+            io.to('general').emit('game_score_update', {
+                homeScore: currentGame.homeScore,
+                awayScore: currentGame.awayScore,
+                quarter: newQuarter,
+                timeRemaining: newGameTime.time
+            });
+            console.log(`🏀 Time Update: ${currentGame.awayTeam} ${currentGame.awayScore} - ${currentGame.homeScore} ${currentGame.homeTeam} | Q${newQuarter} ${newGameTime.time}`);
+            return;
+        }
         // Randomly decide which team scores (slightly favor home team)
         const homeTeamScores = Math.random() < 0.52; // 52% chance home team scores
         // Determine points scored (1, 2, or 3 points with realistic probabilities)
@@ -427,8 +647,8 @@ function startScoreUpdates(io) {
         // Update scores
         const newHomeScore = homeTeamScores ? currentGame.homeScore + pointsScored : currentGame.homeScore;
         const newAwayScore = !homeTeamScores ? currentGame.awayScore + pointsScored : currentGame.awayScore;
-        // Advance game time randomly (30 seconds to 2 minutes)
-        const timeAdvance = Math.floor(Math.random() * 90) + 30; // 30-120 seconds
+        // Advance game time randomly (15 seconds to 1 minute)
+        const timeAdvance = Math.floor(Math.random() * 45) + 15; // 15-60 seconds
         const newGameTime = advanceGameTime(currentGame.timeRemaining, timeAdvance);
         let newQuarter = currentGame.quarter;
         // Check if quarter should advance
@@ -437,7 +657,7 @@ function startScoreUpdates(io) {
             newGameTime.time = '12:00'; // Reset time for new quarter
         }
         // Update game state
-        (0, mockData_1.updateGameScore)(newHomeScore, newAwayScore, newQuarter, newGameTime.time);
+        (0, nbaData_1.updateGameScore)(newHomeScore, newAwayScore, newQuarter, newGameTime.time);
         // Broadcast score update
         io.to('general').emit('game_score_update', {
             homeScore: newHomeScore,
@@ -471,7 +691,7 @@ function isQuarterOver(timeString) {
 }
 function startMarketDataBroadcast(io) {
     setInterval(() => {
-        const playersList = (0, mockData_1.getPlayers)();
+        const playersList = (0, nbaData_1.getPlayers)();
         // Calculate market statistics
         const totalMarketCap = playersList.reduce((sum, p) => sum + (p.currentPrice * 1000), 0); // Assume 1000 shares per player
         const totalVolume24h = Math.random() * 500000 + 100000; // Random volume
@@ -523,13 +743,20 @@ function stopGameSimulation() {
         clearInterval(scoreUpdateInterval);
         scoreUpdateInterval = null;
     }
+    if (realtimeEventInterval) {
+        clearInterval(realtimeEventInterval);
+        realtimeEventInterval = null;
+    }
     // Clear active flash multipliers
     activeFlashMultipliers.clear();
+    // Reset real-time event processing
+    realtimeEventIndex = 0;
+    liveGameEvents = [];
     console.log('✅ Game simulation stopped');
 }
 function startMarketSentimentUpdates(io) {
     setInterval(() => {
-        const currentGame = (0, mockData_1.getCurrentGame)();
+        const currentGame = (0, nbaData_1.getCurrentGame)();
         if (!currentGame || !currentGame.isActive)
             return;
         // Randomly change market sentiment for day trading
@@ -552,4 +779,41 @@ function startMarketSentimentUpdates(io) {
 }
 function getActiveFlashMultipliers() {
     return Array.from(activeFlashMultipliers.values());
+}
+// Main function to start the game simulation
+function startGameSimulation(io) {
+    console.log('🎮 Starting game simulation...');
+    // Check if we have NBA Finals replay data
+    if (liveGameEvents.length > 0) {
+        console.log('🏀 NBA Finals replay data available, using real play-by-play events');
+        // Real NBA Finals data is being processed in real-time
+        startPriceUpdates(io);
+        startFlashMultiplierSystem(io);
+        startMarketDataBroadcast(io);
+        startMarketSentimentUpdates(io);
+        startScoreUpdates(io);
+        console.log('✅ NBA Finals simulation started');
+        return;
+    }
+    // Check if live games are available
+    if (liveGameManager_1.liveGameManager.isMonitoring()) {
+        console.log('🏀 Live games detected, using real SportsData.io data');
+        // Start price updates even with live games for additional simulation
+        startPriceUpdates(io);
+        startFlashMultiplierSystem(io);
+        startMarketDataBroadcast(io);
+        startMarketSentimentUpdates(io);
+        startScoreUpdates(io);
+        console.log('✅ Live game simulation started');
+        return;
+    }
+    console.log('📊 No live games or replay data, starting mock simulation...');
+    // Start mock simulation intervals
+    startPriceUpdates(io);
+    startFlashMultiplierSystem(io);
+    startGameEvents(io);
+    startMarketDataBroadcast(io);
+    startMarketSentimentUpdates(io);
+    startScoreUpdates(io);
+    console.log('✅ Game simulation started');
 }

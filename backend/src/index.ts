@@ -10,10 +10,11 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import { initializeSocketHandlers } from './socket/socketHandler';
-import { initializeMockData, getPlayers } from './data/mockData';
-import { startGameSimulation } from './socket/gameSimulation';
+import { initializeNBAData, getPlayers } from './data/nbaData';
 import PriceEngine from './utils/priceEngine';
 import { initializeSupabaseTables } from './config/supabase';
+import { liveGameManager } from './services/liveGameManager';
+import { realPriceEngine } from './utils/realPriceEngine';
 
 // Import routes
 import playersRouter from './routes/players';
@@ -22,6 +23,8 @@ import tradesRouter from './routes/trades';
 import leaderboardRouter from './routes/leaderboard';
 import gameRouter from './routes/game';
 import authRouter from './routes/auth';
+import liveDataRouter from './routes/liveData';
+import gameSimulationRouter from './routes/gameSimulation';
 
 const app = express();
 const server = createServer(app);
@@ -66,6 +69,8 @@ app.use('/api/portfolio', portfolioRouter);
 app.use('/api/trades', tradesRouter);
 app.use('/api/leaderboard', leaderboardRouter);
 app.use('/api/game', gameRouter);
+app.use('/api/live', liveDataRouter);
+app.use('/api/simulation', gameSimulationRouter);
 
 // Global error handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -98,8 +103,8 @@ server.listen(PORT, () => {
     try {
       console.log('🔄 Starting background initialization...');
 
-      // Initialize mock data and socket handlers
-      initializeMockData();
+      // Initialize NBA data and socket handlers
+      await initializeNBAData();
       initializeSocketHandlers(io);
 
       // Initialize Supabase (optional for demo)
@@ -109,8 +114,16 @@ server.listen(PORT, () => {
       const priceEngine = PriceEngine.getInstance();
       const players = getPlayers();
 
-      // Start game simulation LAST (most resource intensive)
-      startGameSimulation(io);
+      // Set base prices for real price engine
+      players.forEach(player => {
+        realPriceEngine.setBasePrice(player.id, player.currentPrice);
+      });
+
+      // Set Socket.IO instance for live game manager
+      liveGameManager.setSocketIO(io);
+
+      // Start live game monitoring
+      await liveGameManager.startLiveMonitoring();
 
       initializationComplete = true;
       console.log('✅ Background initialization complete');

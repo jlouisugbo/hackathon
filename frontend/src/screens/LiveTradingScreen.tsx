@@ -38,10 +38,11 @@ export default function LiveTradingScreen() {
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMultiplier, setFilterMultiplier] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   // Notification badge state for chat
   const [unreadMessages, setUnreadMessages] = useState(0);
   const chatRef = useRef<any>(null);
-  const { players, loading, executeTrade, currentGame } = useGame();
+  const { players, loading, executeTrade, currentGame, paginationInfo, loadMorePlayers, loadPreviousPage, searchPlayers, clearSearch } = useGame();
   const {
     flashMultipliers,
     gameEvents,
@@ -104,6 +105,27 @@ export default function LiveTradingScreen() {
     setSelectedPlayer(player);
     setTradeType('sell');
     setTradeModalVisible(true);
+  };
+
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (query.trim()) {
+      await searchPlayers(query);
+    } else {
+      // Clear search when input is empty
+      await clearSearch();
+    }
+  };
+
+  const handleLoadMore = async () => {
+    if (isLoadingMore || !paginationInfo?.hasNextPage) return;
+    
+    setIsLoadingMore(true);
+    try {
+      await loadMorePlayers();
+    } finally {
+      setIsLoadingMore(false);
+    }
   };
 
   const handleConfirmTrade = async (trade: TradeRequest) => {
@@ -348,7 +370,7 @@ export default function LiveTradingScreen() {
             <TextInput
               placeholder="Search players or teams..."
               value={searchQuery}
-              onChangeText={setSearchQuery}
+              onChangeText={handleSearch}
               style={{ backgroundColor: theme.colors.surfaceVariant, borderRadius: 8, paddingHorizontal: 12 }}
               dense
             />
@@ -383,6 +405,55 @@ export default function LiveTradingScreen() {
             );
           })}
         </View>
+
+        {/* Pagination Controls */}
+        {paginationInfo && (
+          <View style={{ marginTop: 16, alignItems: 'center' }}>
+            {/* Page Navigation */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+              <Button
+                mode="outlined"
+                onPress={loadPreviousPage}
+                disabled={!paginationInfo.hasPrevPage || loading}
+                style={{ borderRadius: 8, marginRight: 8 }}
+                compact
+              >
+                ← Previous
+              </Button>
+              
+              <Text style={{ color: theme.colors.neutral, fontSize: 14, marginHorizontal: 16 }}>
+                Page {paginationInfo.page} of {paginationInfo.totalPages}
+              </Text>
+              
+              <Button
+                mode="outlined"
+                onPress={handleLoadMore}
+                disabled={!paginationInfo.hasNextPage || loading}
+                style={{ borderRadius: 8, marginLeft: 8 }}
+                compact
+              >
+                Next →
+              </Button>
+            </View>
+
+            {/* Load More Button (Alternative to pagination) */}
+            {paginationInfo.hasNextPage && (
+              <Button
+                mode="contained"
+                onPress={handleLoadMore}
+                loading={isLoadingMore}
+                disabled={isLoadingMore}
+                style={{ borderRadius: 8, marginBottom: 8 }}
+              >
+                {isLoadingMore ? 'Loading...' : 'Load More Players'}
+              </Button>
+            )}
+
+            <Text style={{ color: theme.colors.neutral, fontSize: 12 }}>
+              Showing {players.length} of {paginationInfo.totalPlayers} players
+            </Text>
+          </View>
+        )}
       </View>
     );
   };

@@ -20,8 +20,8 @@
       "bundler": "metro"
     },
     "extra": {
-      "apiUrl": "http://143.215.100.53:3001",
-      "socketUrl": "http://143.215.100.53:3001"
+      "apiUrl": "http://localhost:3001",
+      "socketUrl": "http://localhost:3001"
     },
     "scheme": "player-stock-market",
     "platforms": ["ios", "android", "web"]

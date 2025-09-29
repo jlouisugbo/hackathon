@@ -1,10 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MarketImpactCalculator = void 0;
-const mockData_1 = require("../data/mockData");
+const nbaData_1 = require("../data/nbaData");
 class MarketImpactCalculator {
     static calculateTradeImpact(playerId, tradeType, shares, currentPrice) {
-        const players = (0, mockData_1.getPlayers)();
+        const players = (0, nbaData_1.getPlayers)();
         const player = players.find(p => p.id === playerId);
         if (!player) {
             return {

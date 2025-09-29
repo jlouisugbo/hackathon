@@ -1,5 +1,5 @@
 import { Player } from '../types';
-import { updatePlayerPrice, syncPortfoliosWithPrices, checkLimitOrders, getPlayers } from '../data/mockData';
+import { updatePlayerPrice, syncPortfoliosWithPrices, checkLimitOrders, getPlayers } from '../data/nbaData';
 
 export class PriceEngine {
   private static instance: PriceEngine;

@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const uuid_1 = require("uuid");
-const mockData_1 = require("../data/mockData");
+const nbaData_1 = require("../data/nbaData");
 const databaseService_1 = require("../services/databaseService");
 const authService_1 = require("../services/authService");
 const router = express_1.default.Router();
@@ -20,8 +20,14 @@ router.post('/', async (req, res) => {
         if (authHeader && authHeader.startsWith('Bearer ')) {
             try {
                 const token = authHeader.substring(7);
-                const decoded = authService_1.authService.verifyToken(token);
-                userId = decoded.id;
+                // Handle demo token
+                if (token === 'demo-token') {
+                    userId = req.headers['user-id'] || 'demo-user';
+                }
+                else {
+                    const decoded = authService_1.authService.verifyToken(token);
+                    userId = decoded.id;
+                }
             }
             catch (error) {
                 return res.status(401).json({
@@ -58,7 +64,7 @@ router.post('/', async (req, res) => {
             });
         }
         // Find player
-        const playersList = (0, mockData_1.getPlayers)();
+        const playersList = (0, nbaData_1.getPlayers)();
         const player = playersList.find(p => p.id === playerId);
         if (!player) {
             return res.status(404).json({
@@ -77,8 +83,14 @@ router.post('/', async (req, res) => {
             tradeResult = await executeTradeWithDatabase(userId, playerId, playerName || player.name, type, shares, currentPrice, accountType, totalAmount);
         }
         else {
+            // Ensure user has a portfolio in mock data (create one if they don't)
+            let userPortfolio = nbaData_1.portfolios.find(p => p.userId === userId);
+            if (!userPortfolio) {
+                console.log(`📊 Creating portfolio for user: ${userId}`);
+                userPortfolio = (0, nbaData_1.createDemoPortfolio)(userId);
+            }
             // Fallback to mock data
-            tradeResult = (0, mockData_1.executeTradeOrder)(userId, playerId, shares, type, accountType);
+            tradeResult = (0, nbaData_1.executeTradeOrder)(userId, playerId, shares, type, accountType);
         }
         if (tradeResult.success) {
             const trade = {
@@ -213,7 +225,7 @@ router.get('/:userId', async (req, res) => {
             return res.json(response);
         }
         // Fallback to mock data
-        const userTrades = (0, mockData_1.getTrades)().filter(trade => trade.userId === userId);
+        const userTrades = (0, nbaData_1.getTrades)().filter(trade => trade.userId === userId);
         const response = {
             success: true,
             data: userTrades,
@@ -232,7 +244,7 @@ router.get('/:userId', async (req, res) => {
 });
 // GET /api/trades - Get all trades (admin)
 router.get('/', (req, res) => {
-    const allTrades = (0, mockData_1.getTrades)();
+    const allTrades = (0, nbaData_1.getTrades)();
     const response = {
         success: true,
         data: allTrades,

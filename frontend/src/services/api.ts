@@ -92,11 +92,16 @@ class ApiService {
     order?: 'asc' | 'desc';
     position?: string;
     team?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
   }): Promise<ApiResponse<Player[]>> {
     const searchParams = new URLSearchParams();
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
-        if (value) searchParams.append(key, value);
+        if (value !== undefined && value !== null) {
+          searchParams.append(key, value.toString());
+        }
       });
     }
 

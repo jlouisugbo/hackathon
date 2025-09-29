@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PriceEngine = void 0;
-const mockData_1 = require("../data/mockData");
+const nbaData_1 = require("../data/nbaData");
 class PriceEngine {
     constructor() {
         this.updateInterval = null;
@@ -77,11 +77,11 @@ class PriceEngine {
             // Round to 2 decimal places
             const roundedPrice = Math.round(newPrice * 100) / 100;
             const change = roundedPrice - oldPrice;
-            (0, mockData_1.updatePlayerPrice)(player.id, roundedPrice);
+            (0, nbaData_1.updatePlayerPrice)(player.id, roundedPrice);
             // Sync portfolios with new prices
-            (0, mockData_1.syncPortfoliosWithPrices)();
+            (0, nbaData_1.syncPortfoliosWithPrices)();
             // Check limit orders
-            (0, mockData_1.checkLimitOrders)();
+            (0, nbaData_1.checkLimitOrders)();
             // Notify WebSocket callbacks (for Joel's system)
             this.priceUpdateCallbacks.forEach(callback => callback(player.id, roundedPrice, change));
             // Log significant price movements
@@ -101,7 +101,7 @@ class PriceEngine {
     // Flash multiplier for exciting moments - called by Joel's game simulation
     applyFlashMultiplier(playerId, multiplier, reason) {
         try {
-            const players = (0, mockData_1.getPlayers)();
+            const players = (0, nbaData_1.getPlayers)();
             const player = players.find((p) => p.id === playerId);
             if (!player)
                 return false;
@@ -109,10 +109,10 @@ class PriceEngine {
             const priceBoost = player.currentPrice * (multiplier - 1);
             const newPrice = Math.round((player.currentPrice + priceBoost) * 100) / 100;
             const change = newPrice - oldPrice;
-            (0, mockData_1.updatePlayerPrice)(playerId, newPrice);
+            (0, nbaData_1.updatePlayerPrice)(playerId, newPrice);
             // Sync portfolios and check limit orders
-            (0, mockData_1.syncPortfoliosWithPrices)();
-            (0, mockData_1.checkLimitOrders)();
+            (0, nbaData_1.syncPortfoliosWithPrices)();
+            (0, nbaData_1.checkLimitOrders)();
             // Notify callbacks
             this.priceUpdateCallbacks.forEach(callback => callback(playerId, newPrice, change));
             console.log(`⚡ FLASH MULTIPLIER: ${player.name} +${((multiplier - 1) * 100).toFixed(1)}% - ${reason}`);

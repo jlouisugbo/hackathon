@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const uuid_1 = require("uuid");
-const mockData_1 = require("../data/mockData");
+const nbaData_1 = require("../data/nbaData");
 const databaseService_1 = require("../services/databaseService");
 const authService_1 = require("../services/authService");
 const marketImpact_1 = require("../utils/marketImpact");
@@ -14,6 +14,13 @@ const router = express_1.default.Router();
 // POST /api/trades - Execute trade (simplified endpoint for demo)
 router.post('/', async (req, res) => {
     try {
+        console.log('🔍 Trade request received:', {
+            body: req.body,
+            headers: {
+                authorization: req.headers.authorization,
+                'user-id': req.headers['user-id']
+            }
+        });
         const tradeRequest = req.body;
         const { playerId, playerName, type, shares, orderType = 'market', accountType = 'season' } = tradeRequest;
         // Extract user ID from Authorization header
@@ -22,8 +29,14 @@ router.post('/', async (req, res) => {
         if (authHeader && authHeader.startsWith('Bearer ')) {
             try {
                 const token = authHeader.substring(7);
-                const decoded = authService_1.authService.verifyToken(token);
-                userId = decoded.id;
+                // Handle demo token
+                if (token === 'demo-token') {
+                    userId = req.headers['user-id'] || 'demo-user';
+                }
+                else {
+                    const decoded = authService_1.authService.verifyToken(token);
+                    userId = decoded.id;
+                }
             }
             catch (error) {
                 return res.status(401).json({
@@ -38,7 +51,9 @@ router.post('/', async (req, res) => {
             userId = req.headers['user-id'] || 'demo-user';
         }
         // Validation
+        console.log('🔍 Validating trade request:', { playerId, type, shares, accountType });
         if (!playerId || !type || !shares) {
+            console.log('❌ Missing required fields:', { playerId, type, shares });
             return res.status(400).json({
                 success: false,
                 error: 'Missing required fields',
@@ -60,7 +75,7 @@ router.post('/', async (req, res) => {
             });
         }
         // Find player
-        const playersList = (0, mockData_1.getPlayers)();
+        const playersList = (0, nbaData_1.getPlayers)();
         const player = playersList.find(p => p.id === playerId);
         if (!player) {
             return res.status(404).json({
@@ -73,13 +88,19 @@ router.post('/', async (req, res) => {
         // Calculate market impact before executing trade
         const marketImpact = marketImpact_1.MarketImpactCalculator.calculateTradeImpact(playerId, type, shares, currentPrice);
         const totalAmount = shares * currentPrice;
+        // Ensure user has a portfolio (create one if they don't)
+        let userPortfolio = nbaData_1.portfolios.find(p => p.userId === userId);
+        if (!userPortfolio) {
+            console.log(`📊 Creating portfolio for user: ${userId}`);
+            userPortfolio = (0, nbaData_1.createDemoPortfolio)(userId);
+        }
         // Use mock data for session persistence (no database)
         let tradeResult;
-        tradeResult = (0, mockData_1.executeTradeOrder)(userId, playerId, shares, type, accountType);
-    if (tradeResult.success) {
-        // Apply market impact to player price if significant
+        tradeResult = (0, nbaData_1.executeTradeOrder)(userId, playerId, shares, type, accountType);
+        if (tradeResult.success) {
+            // Apply market impact to player price if significant
             if (marketImpact.broadcastRequired && Math.abs(marketImpact.priceImpact) > 0.01) {
-                (0, mockData_1.updatePlayerPrice)(playerId, marketImpact.newPrice);
+                (0, nbaData_1.updatePlayerPrice)(playerId, marketImpact.newPrice);
                 // Broadcast price update to all connected users
                 const io = req.app.get('io');
                 if (io) {
@@ -262,7 +283,7 @@ router.post('/market', async (req, res) => {
             });
         }
         // Find player
-        const playersList = (0, mockData_1.getPlayers)();
+        const playersList = (0, nbaData_1.getPlayers)();
         const player = playersList.find(p => p.id === playerId);
         if (!player) {
             return res.status(404).json({
@@ -272,8 +293,8 @@ router.post('/market', async (req, res) => {
             });
         }
         // Find portfolio
-        const portfoliosList = (0, mockData_1.getPortfolios)();
-        const portfolioIndex = mockData_1.portfolios.findIndex(p => p.userId === userId);
+        const portfoliosList = (0, nbaData_1.getPortfolios)();
+        const portfolioIndex = nbaData_1.portfolios.findIndex(p => p.userId === userId);
         if (portfolioIndex === -1) {
             return res.status(404).json({
                 success: false,
@@ -281,7 +302,7 @@ router.post('/market', async (req, res) => {
                 message: `Portfolio for user ${userId} not found`
             });
         }
-        const portfolio = mockData_1.portfolios[portfolioIndex];
+        const portfolio = nbaData_1.portfolios[portfolioIndex];
         const currentPrice = player.currentPrice;
         const totalAmount = shares * currentPrice;
         // Check live trading limits
@@ -426,7 +447,7 @@ router.post('/market', async (req, res) => {
             });
         }
         // Add trade to history
-        (0, mockData_1.addTrade)(trade);
+        (0, nbaData_1.addTrade)(trade);
         const response = {
             success: true,
             data: trade,
@@ -485,7 +506,7 @@ router.post('/limit', async (req, res) => {
             });
         }
         // Check if user already has too many pending limit orders
-        const userOrders = (0, mockData_1.getUserLimitOrders)(userId);
+        const userOrders = (0, nbaData_1.getUserLimitOrders)(userId);
         if (userOrders.length >= 10) {
             return res.status(400).json({
                 success: false,
@@ -493,7 +514,7 @@ router.post('/limit', async (req, res) => {
                 message: 'Maximum 10 pending limit orders allowed'
             });
         }
-        const result = (0, mockData_1.createLimitOrder)(userId, playerId, shares, type, limitPrice, accountType);
+        const result = (0, nbaData_1.createLimitOrder)(userId, playerId, shares, type, limitPrice, accountType);
         if (!result.success) {
             return res.status(400).json({
                 success: false,
@@ -524,7 +545,7 @@ router.get('/:userId/history', (req, res) => {
         const limit = parseInt(req.query.limit) || 20;
         const accountType = req.query.accountType;
         const type = req.query.type;
-        const allTrades = (0, mockData_1.getTrades)();
+        const allTrades = (0, nbaData_1.getTrades)();
         let userTrades = allTrades.filter(t => t.userId === userId);
         // Filter by account type if specified
         if (accountType && ['season', 'live'].includes(accountType)) {
@@ -566,7 +587,7 @@ router.get('/:userId/history', (req, res) => {
 router.get('/recent', (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 10;
-        const allTrades = (0, mockData_1.getTrades)();
+        const allTrades = (0, nbaData_1.getTrades)();
         const recentTrades = allTrades
             .filter(t => t.status === 'executed')
             .sort((a, b) => b.timestamp - a.timestamp)
@@ -610,7 +631,7 @@ router.get('/volume/:playerId', (req, res) => {
                 timeMs = 24 * 60 * 60 * 1000;
         }
         const cutoffTime = Date.now() - timeMs;
-        const allTrades = (0, mockData_1.getTrades)();
+        const allTrades = (0, nbaData_1.getTrades)();
         const playerTrades = allTrades.filter(t => t.playerId === playerId &&
             t.status === 'executed' &&
             t.timestamp >= cutoffTime);

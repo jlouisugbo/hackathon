@@ -1,5 +1,5 @@
 import express from 'express';
-import { getUsers, getPortfolios } from '../data/mockData';
+import { getUsers, getPortfolios } from '../data/nbaData';
 import { ApiResponse, LeaderboardEntry } from '../types';
 
 const router = express.Router();

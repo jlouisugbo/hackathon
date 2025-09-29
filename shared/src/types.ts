@@ -248,8 +248,10 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
   pagination: {
     page: number;
     limit: number;
-    total: number;
+    totalPlayers: number;
     totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
   };
 }
 

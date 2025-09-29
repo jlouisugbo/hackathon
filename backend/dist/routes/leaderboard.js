@@ -4,15 +4,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const mockData_1 = require("../data/mockData");
+const nbaData_1 = require("../data/nbaData");
 const router = express_1.default.Router();
 // GET /api/leaderboard/season - Season rankings
 router.get('/season', (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 50;
         const page = parseInt(req.query.page) || 1;
-        const users = (0, mockData_1.getUsers)();
-        const portfolios = (0, mockData_1.getPortfolios)();
+        const users = (0, nbaData_1.getUsers)();
+        const portfolios = (0, nbaData_1.getPortfolios)();
         // Create leaderboard entries
         const leaderboardEntries = users.map(user => {
             const portfolio = portfolios.find(p => p.userId === user.id);
@@ -65,8 +65,8 @@ router.get('/season', (req, res) => {
 router.get('/live', (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 20;
-        const users = (0, mockData_1.getUsers)();
-        const portfolios = (0, mockData_1.getPortfolios)();
+        const users = (0, nbaData_1.getUsers)();
+        const portfolios = (0, nbaData_1.getPortfolios)();
         // Create live leaderboard based on live holdings performance
         const liveEntries = users
             .map(user => {
@@ -117,8 +117,8 @@ router.get('/live', (req, res) => {
 router.get('/daily', (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 10;
-        const users = (0, mockData_1.getUsers)();
-        const portfolios = (0, mockData_1.getPortfolios)();
+        const users = (0, nbaData_1.getUsers)();
+        const portfolios = (0, nbaData_1.getPortfolios)();
         // Create daily leaderboard based on today's P&L
         const dailyEntries = users.map(user => {
             const portfolio = portfolios.find(p => p.userId === user.id);
@@ -165,8 +165,8 @@ router.get('/user/:userId', (req, res) => {
     try {
         const { userId } = req.params;
         const context = parseInt(req.query.context) || 5; // Users above and below
-        const users = (0, mockData_1.getUsers)();
-        const portfolios = (0, mockData_1.getPortfolios)();
+        const users = (0, nbaData_1.getUsers)();
+        const portfolios = (0, nbaData_1.getPortfolios)();
         // Create full leaderboard
         const leaderboardEntries = users.map(user => {
             const portfolio = portfolios.find(p => p.userId === user.id);
@@ -227,8 +227,8 @@ router.get('/user/:userId', (req, res) => {
 // GET /api/leaderboard/stats - Get leaderboard statistics
 router.get('/stats', (req, res) => {
     try {
-        const users = (0, mockData_1.getUsers)();
-        const portfolios = (0, mockData_1.getPortfolios)();
+        const users = (0, nbaData_1.getUsers)();
+        const portfolios = (0, nbaData_1.getPortfolios)();
         const portfolioValues = portfolios.map(p => p.totalValue);
         const todaysPLs = portfolios.map(p => p.todaysPL);
         // Calculate statistics

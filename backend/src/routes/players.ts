@@ -1,11 +1,11 @@
 import express from 'express';
-import { getPlayers } from '../data/mockData';
+import { getPlayers } from '../data/nbaData';
 import { ApiResponse, Player } from '../types';
 import PriceEngine from '../utils/priceEngine';
 
 const router = express.Router();
 
-// GET /api/players - Get all players with current prices
+// GET /api/players - Get all players with current prices (with pagination)
 router.get('/', (req, res) => {
   try {
     const players = getPlayers();
@@ -13,8 +13,24 @@ router.get('/', (req, res) => {
     const order = req.query.order as string || 'asc';
     const position = req.query.position as string;
     const team = req.query.team as string;
+    const search = req.query.search as string;
+    
+    // Pagination parameters
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const offset = (page - 1) * limit;
 
     let filteredPlayers = [...players];
+
+    // Filter by search query if specified
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filteredPlayers = filteredPlayers.filter(p => 
+        p.name.toLowerCase().includes(searchLower) ||
+        p.team.toLowerCase().includes(searchLower) ||
+        p.position.toLowerCase().includes(searchLower)
+      );
+    }
 
     // Filter by position if specified
     if (position) {
@@ -46,10 +62,23 @@ router.get('/', (req, res) => {
       }
     });
 
-    const response: ApiResponse<Player[]> = {
+    // Calculate pagination info
+    const totalPlayers = filteredPlayers.length;
+    const totalPages = Math.ceil(totalPlayers / limit);
+    const paginatedPlayers = filteredPlayers.slice(offset, offset + limit);
+
+    const response: any = {
       success: true,
-      data: filteredPlayers,
-      message: `Retrieved ${filteredPlayers.length} players`
+      data: paginatedPlayers,
+      message: `Retrieved ${paginatedPlayers.length} players (page ${page} of ${totalPages})`,
+      pagination: {
+        page,
+        limit,
+        totalPlayers,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      }
     };
 
     res.json(response);

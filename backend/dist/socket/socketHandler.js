@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.initializeSocketHandlers = initializeSocketHandlers;
 exports.broadcastPriceUpdate = broadcastPriceUpdate;
@@ -148,7 +181,7 @@ function initializeSocketHandlers(io) {
             socket.emit('player_unsubscribed', { playerId, status: 'unsubscribed' });
         });
         // Handle live trading room
-        socket.on('join_live_trading', () => {
+        socket.on('join_live_trading', async () => {
             const user = connectedUsers.get(socket.id);
             if (!user)
                 return;
@@ -157,6 +190,37 @@ function initializeSocketHandlers(io) {
                 userRooms.set(user.userId, new Set());
             }
             userRooms.get(user.userId).add('live_trading');
+            // Reset trades for new live session
+            try {
+                const { databaseService } = await Promise.resolve().then(() => __importStar(require('../services/databaseService')));
+                let portfolio = await databaseService.getPortfolioByUserId(user.userId);
+                if (!portfolio) {
+                    // Create portfolio if it doesn't exist
+                    console.log(`📊 Creating portfolio for ${user.username}`);
+                    const defaultPortfolio = {
+                        userId: user.userId,
+                        seasonHoldings: [],
+                        liveHoldings: [],
+                        totalValue: 1000,
+                        availableBalance: 1000,
+                        todaysPL: 0,
+                        seasonPL: 0,
+                        livePL: 0,
+                        tradesRemaining: 5,
+                        lastUpdated: Date.now()
+                    };
+                    await databaseService.createPortfolio(user.userId, defaultPortfolio);
+                    portfolio = await databaseService.getPortfolioByUserId(user.userId);
+                }
+                if (portfolio) {
+                    portfolio.tradesRemaining = 5; // Reset to 5 trades per live session
+                    await databaseService.updatePortfolio(user.userId, portfolio);
+                    console.log(`🔄 Reset trades for ${user.username} - 5 trades available`);
+                }
+            }
+            catch (error) {
+                console.error('❌ Failed to reset trades for user:', error);
+            }
             console.log(`🔥 User ${user.username} joined live trading room`);
         });
         socket.on('leave_live_trading', () => {

@@ -37,7 +37,7 @@ const { width } = Dimensions.get('window');
 export default function MarketDashboard() {
   const { portfolio, loading, error, refreshPortfolio } = usePortfolio();
   const { priceUpdates, isConnected, joinRoomWithAuth, flashMultipliers, gameEvents } = useSocket();
-  const { players, executeTrade, clearAllData, forceRestart, clearAllStorage, refreshPlayers, clearCachedPlayers } = useGame();
+  const { players, executeTrade, clearAllData, forceRestart, clearAllStorage, refreshPlayers, clearCachedPlayers, paginationInfo, loadMorePlayers, loadPreviousPage, searchPlayers, clearSearch } = useGame();
 
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -123,10 +123,18 @@ export default function MarketDashboard() {
     }
   };
 
-  const filteredPlayers = players.filter(player =>
-    player.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    player.team.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (query.trim()) {
+      await searchPlayers(query);
+    } else {
+      // Clear search when input is empty
+      await clearSearch();
+    }
+  };
+
+  // Use server-side search instead of client-side filtering
+  const filteredPlayers = players; // Players are already filtered by the server
 
   const topGainers = players
     .filter(p => p.priceChangePercent24h > 0)
@@ -251,7 +259,7 @@ export default function MarketDashboard() {
             <Searchbar
               placeholder="Search players or teams..."
               value={searchQuery}
-              onChangeText={setSearchQuery}
+              onChangeText={handleSearch}
               style={styles.searchBar}
               inputStyle={styles.searchInput}
               iconColor={theme.colors.primary}
@@ -328,6 +336,42 @@ export default function MarketDashboard() {
                 />
               ))}
             </View>
+
+            {/* Pagination Controls */}
+            {paginationInfo && (
+              <View style={{ marginTop: 16, alignItems: 'center' }}>
+                {/* Page Navigation */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                  <Button
+                    mode="outlined"
+                    onPress={loadPreviousPage}
+                    disabled={!paginationInfo.hasPrevPage || loading}
+                    style={{ borderRadius: 8, marginRight: 8 }}
+                    compact
+                  >
+                    ← Previous
+                  </Button>
+                  
+                  <Text style={{ color: theme.colors.neutral, fontSize: 14, marginHorizontal: 16 }}>
+                    Page {paginationInfo.page} of {paginationInfo.totalPages}
+                  </Text>
+                  
+                  <Button
+                    mode="outlined"
+                    onPress={loadMorePlayers}
+                    disabled={!paginationInfo.hasNextPage || loading}
+                    style={{ borderRadius: 8, marginLeft: 8 }}
+                    compact
+                  >
+                    Next →
+                  </Button>
+                </View>
+
+                <Text style={{ color: theme.colors.neutral, fontSize: 12 }}>
+                  Showing {players.length} of {paginationInfo.totalPlayers} players
+                </Text>
+              </View>
+            )}
           </View>
         </ScrollView>
 

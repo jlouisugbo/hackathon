@@ -3,14 +3,29 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LiveGame, Player, TradeRequest, Trade } from '@player-stock-market/shared';
 import { apiService } from '../services/api';
 import { usePortfolio } from './PortfolioContext';
+import { useSocket } from './SocketContext';
+
+interface PaginationInfo {
+  page: number;
+  limit: number;
+  totalPlayers: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
 
 interface GameContextType {
   currentGame: LiveGame | null;
   players: Player[];
   loading: boolean;
   error: string | null;
+  paginationInfo: PaginationInfo | null;
   refreshGame: () => Promise<void>;
   refreshPlayers: () => Promise<void>;
+  loadMorePlayers: () => Promise<void>;
+  loadPreviousPage: () => Promise<void>;
+  searchPlayers: (query: string) => Promise<void>;
+  clearSearch: () => Promise<void>;
   forceRefreshAll: () => Promise<void>;
   clearAllData: () => Promise<void>;
   forceRestart: () => Promise<void>;
@@ -24,14 +39,23 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const { addUserTrade, updateCashBalance } = usePortfolio();
+  const { liveGame: socketLiveGame } = useSocket();
   const [currentGame, setCurrentGame] = useState<LiveGame | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [paginationInfo, setPaginationInfo] = useState<PaginationInfo | null>(null);
 
   useEffect(() => {
     initializeGameData();
   }, []);
+
+  // Update currentGame when socket liveGame changes
+  useEffect(() => {
+    if (socketLiveGame) {
+      setCurrentGame(socketLiveGame);
+    }
+  }, [socketLiveGame]);
 
   const initializeGameData = async () => {
     console.log('🔄 Initializing game data...');
@@ -58,41 +82,33 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const fetchPlayers = async () => {
+  const fetchPlayers = async (page: number = 1, searchQuery?: string) => {
     try {
-      console.log('🔄 Fetching players from API...');
-      console.log('🔄 Current timestamp:', Date.now());
+      console.log('🔄 Fetching players from API...', { page, searchQuery });
       
-      // ALWAYS fetch fresh data from backend - disable caching for now
-      console.log('🔄 Clearing cached players and fetching fresh data...');
-      await AsyncStorage.removeItem('cached_players');
-      
-      // Add cache-busting parameter to ensure fresh data
-      const timestamp = Date.now();
-      const response = await apiService.getPlayers();
+      // Fetch paginated players
+      const response = await apiService.getPlayers({
+        page,
+        limit: 20, // Show 20 players per page
+        search: searchQuery,
+        sortBy: 'name',
+        order: 'asc'
+      });
 
       if (response.success && response.data) {
         console.log('✅ Players fetched successfully:', response.data.length, 'players');
-        console.log('📋 First few player IDs:', response.data.slice(0, 3).map(p => ({ id: p.id, name: p.name })));
-        console.log('📋 All player IDs:', response.data.map(p => p.id));
+        console.log('📋 Pagination info:', response.pagination);
         
-        // Store players in session storage for persistence
-        try {
-          await AsyncStorage.setItem('cached_players', JSON.stringify(response.data));
-          console.log('💾 Players cached in session storage');
-        } catch (error) {
-          console.error('❌ Failed to cache players:', error);
+        // If it's the first page or a search, replace players
+        // Otherwise, append to existing players
+        if (page === 1 || searchQuery) {
+          setPlayers(response.data);
+        } else {
+          setPlayers(prev => [...prev, ...response.data]);
         }
         
-        // Force clear existing players first
-        setPlayers([]);
-        
-        // Wait a moment for state to clear
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Set fresh players
-        setPlayers(response.data);
-        console.log('✅ Fresh players set in state');
+        // Store pagination info
+        setPaginationInfo(response.pagination);
       } else {
         console.error('❌ Failed to fetch players:', response.error);
         setError(response.error || 'Failed to fetch players');
@@ -111,7 +127,36 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     console.log('🔄 Force refreshing players...');
     setPlayers([]); // Clear existing players first
     setError(null); // Clear any errors
-    await fetchPlayers();
+    await fetchPlayers(1);
+  };
+
+  const loadMorePlayers = async () => {
+    if (!paginationInfo?.hasNextPage) return;
+    
+    console.log('🔄 Loading more players...');
+    await fetchPlayers(paginationInfo.page + 1);
+  };
+
+  const searchPlayers = async (query: string) => {
+    console.log('🔍 Searching players:', query);
+    // Clear current players and search from page 1 to get fresh results across all players
+    setPlayers([]);
+    setError(null);
+    await fetchPlayers(1, query);
+  };
+
+  const clearSearch = async () => {
+    console.log('🔄 Clearing search, returning to all players...');
+    setPlayers([]);
+    setError(null);
+    await fetchPlayers(1); // Fetch page 1 without search query
+  };
+
+  const loadPreviousPage = async () => {
+    if (!paginationInfo?.hasPrevPage) return;
+    
+    console.log('🔄 Loading previous page...');
+    await fetchPlayers(paginationInfo.page - 1);
   };
 
   const forceRefreshAll = async () => {
@@ -313,8 +358,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     players,
     loading,
     error,
+    paginationInfo,
     refreshGame,
     refreshPlayers,
+    loadMorePlayers,
+    loadPreviousPage,
+    searchPlayers,
+    clearSearch,
     forceRefreshAll,
     clearAllData,
     forceRestart,

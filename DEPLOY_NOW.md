@@ -53,3 +53,7 @@ Once you get your Railway URL (like `https://hackathon-prizepicks-production.up.
 ✅ Package.json fixed (removed workspace dependency)
 ✅ Railway project created
 ⏳ Waiting for deployment...
+
+## sportsdataio
+
+020f2e02adf44ad1ae7f7fb9264588e9

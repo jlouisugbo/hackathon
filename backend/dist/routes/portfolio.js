@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const mockData_1 = require("../data/mockData");
+const nbaData_1 = require("../data/nbaData");
 const databaseService_1 = require("../services/databaseService");
 const router = express_1.default.Router();
 // GET /api/portfolio/:userId - Get user portfolio
@@ -12,12 +12,23 @@ router.get('/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
         // Try to get portfolio from database first
-        let portfolio = await databaseService_1.databaseService.getPortfolioByUserId(userId);
-        // If not found in database, try mock data as fallback
-        if (!portfolio) {
-            console.log(`📊 Portfolio not found in database for user: ${userId}, trying mock data`);
-            const portfolioList = (0, mockData_1.getPortfolios)();
-            portfolio = portfolioList.find(p => p.userId === userId);
+        let databasePortfolio = await databaseService_1.databaseService.getPortfolioByUserId(userId);
+        // Always check mock data as well
+        const portfolioList = (0, nbaData_1.getPortfolios)();
+        let mockPortfolio = portfolioList.find(p => p.userId === userId);
+        // Use mock data if it exists and is more recent, or if database portfolio doesn't exist
+        let portfolio;
+        if (mockPortfolio && (!databasePortfolio || mockPortfolio.lastUpdated > databasePortfolio.lastUpdated)) {
+            console.log(`📊 Using mock data portfolio for user: ${userId} (more recent or database empty)`);
+            portfolio = mockPortfolio;
+        }
+        else if (databasePortfolio) {
+            console.log(`📊 Using database portfolio for user: ${userId}`);
+            portfolio = databasePortfolio;
+        }
+        else {
+            console.log(`📊 No portfolio found for user: ${userId}`);
+            portfolio = null;
         }
         // If still not found, generate a dummy portfolio for any user ID
         if (!portfolio) {
@@ -44,7 +55,7 @@ router.get('/:userId', async (req, res) => {
 router.get('/:userId/performance', (req, res) => {
     try {
         const { userId } = req.params;
-        const portfolioList = (0, mockData_1.getPortfolios)();
+        const portfolioList = (0, nbaData_1.getPortfolios)();
         const portfolio = portfolioList.find(p => p.userId === userId);
         if (!portfolio) {
             return res.status(404).json({
@@ -116,7 +127,7 @@ router.get('/:userId/holdings/:accountType', (req, res) => {
                 message: 'Account type must be "season" or "live"'
             });
         }
-        const portfolioList = (0, mockData_1.getPortfolios)();
+        const portfolioList = (0, nbaData_1.getPortfolios)();
         const portfolio = portfolioList.find(p => p.userId === userId);
         if (!portfolio) {
             return res.status(404).json({
@@ -174,7 +185,7 @@ router.put('/:userId/balance', (req, res) => {
                 message: 'Amount must be a positive number'
             });
         }
-        const portfolioIndex = mockData_1.portfolios.findIndex(p => p.userId === userId);
+        const portfolioIndex = nbaData_1.portfolios.findIndex(p => p.userId === userId);
         if (portfolioIndex === -1) {
             return res.status(404).json({
                 success: false,
@@ -182,11 +193,11 @@ router.put('/:userId/balance', (req, res) => {
                 message: `Portfolio for user ${userId} not found`
             });
         }
-        mockData_1.portfolios[portfolioIndex].availableBalance = Math.round(amount * 100) / 100;
-        mockData_1.portfolios[portfolioIndex].lastUpdated = Date.now();
+        nbaData_1.portfolios[portfolioIndex].availableBalance = Math.round(amount * 100) / 100;
+        nbaData_1.portfolios[portfolioIndex].lastUpdated = Date.now();
         const response = {
             success: true,
-            data: mockData_1.portfolios[portfolioIndex],
+            data: nbaData_1.portfolios[portfolioIndex],
             message: `Updated balance for user ${userId}`
         };
         res.json(response);

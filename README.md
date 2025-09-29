@@ -11,11 +11,12 @@ A real-time NBA player stock market simulation with both **Season Portfolio** an
 - **Real-time Price Updates** - WebSocket-powered live price feeds
 - **Leaderboards** - Season, Live, and Daily rankings
 - **Game Simulation** - Pre-scripted events and price movements
+- **Real NBA Players** - All active NBA players with real statistics and calculated market values
 
 ### Technical Features
 - **Monorepo Architecture** - Shared TypeScript types
 - **Real-time Communication** - Socket.IO for live updates
-- **Mock Data System** - 10 NBA players with realistic data
+- **Real NBA Data** - SportsData API integration with all NBA players
 - **RESTful API** - Complete backend API with all endpoints
 - **Modern UI** - React Native Paper components with custom theme
 
@@ -94,6 +95,7 @@ player-stock-market/
 - Node.js 18+
 - npm 8+
 - Expo CLI (`npm install -g @expo/cli`)
+- SportsData API key (for real NBA data)
 
 ### Installation
 
@@ -103,7 +105,14 @@ player-stock-market/
    npm run install:all
    ```
 
-2. **Start Development Servers**:
+2. **Set up SportsData API** (for real NBA data):
+   ```bash
+   # Get your API key from https://sportsdata.io/
+   # Add to backend/.env:
+   echo "SPORTSDATA_API_KEY=your_api_key_here" >> backend/.env
+   ```
+
+3. **Start Development Servers**:
    ```bash
    # Start both backend and frontend concurrently
    npm run dev

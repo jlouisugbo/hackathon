@@ -4,18 +4,30 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const mockData_1 = require("../data/mockData");
+const nbaData_1 = require("../data/nbaData");
 const priceEngine_1 = __importDefault(require("../utils/priceEngine"));
 const router = express_1.default.Router();
-// GET /api/players - Get all players with current prices
+// GET /api/players - Get all players with current prices (with pagination)
 router.get('/', (req, res) => {
     try {
-        const players = (0, mockData_1.getPlayers)();
+        const players = (0, nbaData_1.getPlayers)();
         const sortBy = req.query.sortBy || 'name';
         const order = req.query.order || 'asc';
         const position = req.query.position;
         const team = req.query.team;
+        const search = req.query.search;
+        // Pagination parameters
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const offset = (page - 1) * limit;
         let filteredPlayers = [...players];
+        // Filter by search query if specified
+        if (search) {
+            const searchLower = search.toLowerCase();
+            filteredPlayers = filteredPlayers.filter(p => p.name.toLowerCase().includes(searchLower) ||
+                p.team.toLowerCase().includes(searchLower) ||
+                p.position.toLowerCase().includes(searchLower));
+        }
         // Filter by position if specified
         if (position) {
             filteredPlayers = filteredPlayers.filter(p => p.position === position.toUpperCase());
@@ -43,10 +55,22 @@ router.get('/', (req, res) => {
                 return aValue > bValue ? 1 : -1;
             }
         });
+        // Calculate pagination info
+        const totalPlayers = filteredPlayers.length;
+        const totalPages = Math.ceil(totalPlayers / limit);
+        const paginatedPlayers = filteredPlayers.slice(offset, offset + limit);
         const response = {
             success: true,
-            data: filteredPlayers,
-            message: `Retrieved ${filteredPlayers.length} players`
+            data: paginatedPlayers,
+            message: `Retrieved ${paginatedPlayers.length} players (page ${page} of ${totalPages})`,
+            pagination: {
+                page,
+                limit,
+                totalPlayers,
+                totalPages,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1
+            }
         };
         res.json(response);
     }
@@ -63,7 +87,7 @@ router.get('/', (req, res) => {
 router.get('/:id', (req, res) => {
     try {
         const { id } = req.params;
-        const players = (0, mockData_1.getPlayers)();
+        const players = (0, nbaData_1.getPlayers)();
         const player = players.find(p => p.id === id);
         if (!player) {
             return res.status(404).json({
@@ -92,7 +116,7 @@ router.get('/:id', (req, res) => {
 router.get('/:id/history', (req, res) => {
     try {
         const { id } = req.params;
-        const players = (0, mockData_1.getPlayers)();
+        const players = (0, nbaData_1.getPlayers)();
         const player = players.find(p => p.id === id);
         if (!player) {
             return res.status(404).json({
@@ -128,7 +152,7 @@ router.get('/:id/history', (req, res) => {
 router.get('/search/:query', (req, res) => {
     try {
         const { query } = req.params;
-        const players = (0, mockData_1.getPlayers)();
+        const players = (0, nbaData_1.getPlayers)();
         const searchResults = players.filter(player => player.name.toLowerCase().includes(query.toLowerCase()) ||
             player.team.toLowerCase().includes(query.toLowerCase()));
         const response = {
@@ -150,7 +174,7 @@ router.get('/search/:query', (req, res) => {
 // GET /api/players/trending/gainers - Get top price gainers
 router.get('/trending/gainers', (req, res) => {
     try {
-        const players = (0, mockData_1.getPlayers)();
+        const players = (0, nbaData_1.getPlayers)();
         const limit = parseInt(req.query.limit) || 5;
         const gainers = players
             .filter(p => p.priceChangePercent24h > 0)
@@ -175,7 +199,7 @@ router.get('/trending/gainers', (req, res) => {
 // GET /api/players/trending/losers - Get top price losers
 router.get('/trending/losers', (req, res) => {
     try {
-        const players = (0, mockData_1.getPlayers)();
+        const players = (0, nbaData_1.getPlayers)();
         const limit = parseInt(req.query.limit) || 5;
         const losers = players
             .filter(p => p.priceChangePercent24h < 0)
@@ -201,7 +225,7 @@ router.get('/trending/losers', (req, res) => {
 // GET /api/players/prices - Get current prices for all players (for socket broadcasts)
 router.get('/prices', (req, res) => {
     try {
-        const players = (0, mockData_1.getPlayers)();
+        const players = (0, nbaData_1.getPlayers)();
         const prices = players.map(player => ({
             id: player.id,
             name: player.name,
@@ -271,7 +295,7 @@ router.post('/:id/flash-multiplier', (req, res) => {
 // GET /api/players/market/data - Get market summary data (for Joel's socket broadcasts)
 router.get('/market/data', (req, res) => {
     try {
-        const players = (0, mockData_1.getPlayers)();
+        const players = (0, nbaData_1.getPlayers)();
         const priceEngine = priceEngine_1.default.getInstance();
         const marketData = priceEngine.getMarketData(players);
         res.json({
