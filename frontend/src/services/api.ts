@@ -306,6 +306,78 @@ export const withRetry = async <T>(
   throw new Error('Max retries exceeded');
 };
 
+// Get play-by-play data for a game
+export const getPlayByPlay = async (gameId: string): Promise<any[]> => {
+  const apiCall = async () => {
+    const response = await fetch(`${API_BASE_URL}/api/live/game/${gameId}/playbyplay`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error(data.message || 'Failed to fetch play-by-play data');
+    }
+
+    return data.data;
+  };
+
+  const retries = 3;
+  const delay = 1000;
+
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await apiCall();
+    } catch (error) {
+      if (i === retries - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
+    }
+  }
+  throw new Error('Max retries exceeded');
+};
+
+// Get active players from current game
+export const getActivePlayers = async (): Promise<any[]> => {
+  const apiCall = async () => {
+    const response = await fetch(`${API_BASE_URL}/api/live/active-players`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error(data.message || 'Failed to fetch active players data');
+    }
+
+    return data.data;
+  };
+
+  const retries = 3;
+  const delay = 1000;
+
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await apiCall();
+    } catch (error) {
+      if (i === retries - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
+    }
+  }
+  throw new Error('Max retries exceeded');
+};
+
 export const isApiError = (error: any): error is { message: string; status?: number } => {
   return error && typeof error.message === 'string';
 };

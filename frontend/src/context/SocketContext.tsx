@@ -108,6 +108,11 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       console.log('✅ Socket connected:', newSocket.id);
       setIsConnected(true);
       reconnectAttempts.current = 0;
+      
+      // Auto-join room when connected
+      setTimeout(() => {
+        joinRoomWithAuth();
+      }, 1000);
     });
 
     newSocket.on('disconnect', (reason) => {
@@ -216,16 +221,32 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         teamName: string;
       };
     }) => {
+      console.log('🏀 Received game score update:', data);
       setLiveGame(prev => {
-        if (!prev) return prev;
+        // Create initial game state if it doesn't exist
+        const baseGame = prev || {
+          id: '22398',
+          homeTeam: 'IND',
+          awayTeam: 'OKC',
+          homeScore: 0,
+          awayScore: 0,
+          quarter: 1,
+          timeRemaining: '12:00',
+          isActive: true,
+          startTime: Date.now(),
+          activePlayers: []
+        };
 
-        return {
-          ...prev,
+        const updatedGame = {
+          ...baseGame,
           homeScore: data.homeScore,
           awayScore: data.awayScore,
           quarter: data.quarter,
           timeRemaining: data.timeRemaining,
         };
+        
+        console.log('🏀 Updated live game state:', updatedGame);
+        return updatedGame;
       });
 
       if (data.lastScore) {

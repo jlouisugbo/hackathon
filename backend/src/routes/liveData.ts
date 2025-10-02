@@ -51,28 +51,6 @@ router.get('/game/:gameId/stats', async (req, res) => {
   }
 });
 
-// GET /api/live/game/:gameId/playbyplay - Get play-by-play for a game
-router.get('/game/:gameId/playbyplay', async (req, res) => {
-  try {
-    const { gameId } = req.params;
-    const playByPlay = await liveDataService.getPlayByPlay(gameId);
-    
-    const response: ApiResponse = {
-      success: true,
-      data: playByPlay,
-      message: `Retrieved play-by-play for game ${gameId}`
-    };
-    
-    res.json(response);
-  } catch (error) {
-    console.error('Error fetching play-by-play:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch play-by-play',
-      message: 'An error occurred while retrieving play-by-play data'
-    });
-  }
-});
 
 // GET /api/live/player/:playerId - Get player details
 router.get('/player/:playerId', async (req, res) => {
@@ -150,6 +128,66 @@ router.post('/update-prices/:gameId', async (req, res) => {
       success: false,
       error: 'Failed to update prices',
       message: 'An error occurred while updating prices'
+    });
+  }
+});
+
+// GET /api/live/game/:gameId/playbyplay - Get play-by-play for a specific game
+router.get('/game/:gameId/playbyplay', async (req, res) => {
+  try {
+    const { gameId } = req.params;
+    
+    // Get the active games to get the filtered plays
+    const activeGames = await liveDataService.getActiveGames();
+    const game = activeGames.find(g => g.GameID.toString() === gameId);
+    
+    if (game && game.Plays) {
+      const response: ApiResponse = {
+        success: true,
+        data: game.Plays,
+        message: `Retrieved ${game.Plays.length} plays for game ${gameId}`
+      };
+      res.json(response);
+    } else {
+      // Fallback to full play-by-play if no cached game
+      const playByPlay = await liveDataService.getReplayPlayByPlay(gameId);
+      
+      const response: ApiResponse = {
+        success: true,
+        data: playByPlay,
+        message: `Retrieved ${playByPlay.length} plays for game ${gameId}`
+      };
+      res.json(response);
+    }
+  } catch (error) {
+    console.error('Error fetching play-by-play:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch play-by-play',
+      message: 'An error occurred while retrieving play-by-play data'
+    });
+  }
+});
+
+// GET /api/live/active-players - Get active players from current game
+router.get('/active-players', async (req, res) => {
+  try {
+    console.log('🏀 Fetching active players...');
+    const activePlayers = await liveDataService.getActivePlayers();
+    
+    const response: ApiResponse = {
+      success: true,
+      data: activePlayers,
+      message: `Retrieved ${activePlayers.length} active players`
+    };
+    
+    res.json(response);
+  } catch (error) {
+    console.error('Error fetching active players:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch active players',
+      message: 'An error occurred while retrieving active players data'
     });
   }
 });

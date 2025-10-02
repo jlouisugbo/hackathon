@@ -21,10 +21,10 @@ export class LiveGameManager {
     this.isRunning = true;
     console.log('🏀 Starting live game monitoring...');
     
-    // Check for active games every 5 seconds for more frequent updates
+    // Check for active games every 1 second for instant updates
     this.updateInterval = setInterval(async () => {
       await this.checkAndUpdateGames();
-    }, 5000) as unknown as NodeJS.Timeout;
+    }, 1000) as unknown as NodeJS.Timeout;
     
     // Initial check
     await this.checkAndUpdateGames();
@@ -173,7 +173,9 @@ export class LiveGameManager {
   // Check for active games and update prices
   private async checkAndUpdateGames(): Promise<void> {
     try {
+      console.log('🏀 Checking for active games...');
       const activeGames = await liveDataService.getActiveGames();
+      console.log(`🏀 Found ${activeGames.length} active games`);
       
       if (activeGames.length === 0) {
         console.log('🏀 No active games found');

@@ -7,6 +7,7 @@ import {
   Dimensions,
   FlatList,
   RefreshControl,
+  TouchableOpacity,
 } from 'react-native';
 import {
   Text,
@@ -22,6 +23,8 @@ import * as Haptics from 'expo-haptics';
 import PlayerCard from '../components/PlayerCard';
 import TradeModal from '../components/TradeModal';
 import LiveChat from '../components/LiveChat';
+import { PlayByPlay } from '../components/PlayByPlay';
+import { ActivePlayers } from '../components/ActivePlayers';
 import { useRef } from 'react';
 
 // Contexts
@@ -57,6 +60,41 @@ export default function LiveTradingScreen() {
   const [tradeType, setTradeType] = useState<'buy' | 'sell'>('buy');
   const [refreshing, setRefreshing] = useState(false);
   const [chatVisible, setChatVisible] = useState(false);
+  const [showPlayByPlay, setShowPlayByPlay] = useState(false);
+  const [showActivePlayers, setShowActivePlayers] = useState(false);
+  const [clientTime, setClientTime] = useState<string>('12:00');
+  
+  // Update client time when game data changes
+  useEffect(() => {
+    if (currentGame) {
+      setClientTime(currentGame.timeRemaining);
+    }
+  }, [currentGame?.timeRemaining]);
+  
+  // Client-side timer for more frequent time updates
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (currentGame) {
+        // Parse the time from the game and update it client-side
+        const [minutes, seconds] = clientTime.split(':').map(Number);
+        if (minutes > 0 || seconds > 0) {
+          let newSeconds = seconds - 1;
+          let newMinutes = minutes;
+          
+          if (newSeconds < 0) {
+            newSeconds = 59;
+            newMinutes = Math.max(0, minutes - 1);
+          }
+          
+          const formattedTime = `${newMinutes}:${newSeconds.toString().padStart(2, '0')}`;
+          setClientTime(formattedTime);
+        }
+      }
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, [currentGame, clientTime]);
+  
   // Listen for new chat messages via WebSocket
   useEffect(() => {
     if (!chatVisible && window && window.addEventListener) {
@@ -164,9 +202,39 @@ export default function LiveTradingScreen() {
             <Text style={styles.liveText}>LIVE</Text>
           </View>
           <Text style={styles.gameTime}>
-            Q{currentGame.quarter} • {currentGame.timeRemaining}
+            Q{currentGame.quarter} • {clientTime}
           </Text>
         </View>
+
+        {/* Play-by-play toggle button */}
+        <TouchableOpacity
+          style={styles.playByPlayToggle}
+          onPress={() => setShowPlayByPlay(!showPlayByPlay)}
+        >
+          <Ionicons 
+            name={showPlayByPlay ? "chevron-up" : "chevron-down"} 
+            size={20} 
+            color={theme.colors.primary} 
+          />
+          <Text style={styles.playByPlayToggleText}>
+            {showPlayByPlay ? 'Hide' : 'Show'} Play-by-Play
+          </Text>
+        </TouchableOpacity>
+
+        {/* Active Players toggle button */}
+        <TouchableOpacity
+          style={styles.playByPlayToggle}
+          onPress={() => setShowActivePlayers(!showActivePlayers)}
+        >
+          <Ionicons 
+            name={showActivePlayers ? "chevron-up" : "chevron-down"} 
+            size={20} 
+            color={theme.colors.primary} 
+          />
+          <Text style={styles.playByPlayToggleText}>
+            {showActivePlayers ? 'Hide' : 'Show'} Active Players
+          </Text>
+        </TouchableOpacity>
 
         {/* Score */}
         <View style={styles.scoreContainer}>
@@ -503,6 +571,12 @@ export default function LiveTradingScreen() {
         }
       >
         {renderGameHeader()}
+        {showPlayByPlay && currentGame && (
+          <PlayByPlay gameId={currentGame.id} />
+        )}
+        {showActivePlayers && currentGame && (
+          <ActivePlayers gameId={currentGame.id} />
+        )}
         {renderFlashMultipliers()}
         {renderLivePortfolio()}
         {renderPlayers()}
@@ -927,5 +1001,21 @@ const styles = StyleSheet.create({
   quickSellButton: {
     borderRadius: 6,
     borderWidth: 1,
+  },
+  playByPlayToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.surfaceVariant,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginVertical: 8,
+  },
+  playByPlayToggleText: {
+    color: theme.colors.primary,
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 4,
   },
 });
